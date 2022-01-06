@@ -737,7 +737,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 403655550}
         m_TargetAssemblyTypeName: StringToIntTest, Assembly-CSharp
-        m_MethodName: GetCommand
+        m_MethodName: EnterTheInput
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

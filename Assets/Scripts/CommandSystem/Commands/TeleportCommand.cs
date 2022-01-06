@@ -18,11 +18,14 @@ namespace CommandSystem
         }
         public override ReturnCommandData CompareToInput(ReturnCommandData resultData)
         {
-            return CommandUtil.DefaultAnalysis<TeleportCommand>(this, resultData);
+            var result = CommandUtil.DefaultAnalysis<TeleportCommand>(this, resultData.preInput);
+            return result;
         }
 
         public override string Execute(string inputCommand)
         {
+            var back = CommandUtil.DefaultExecute<TeleportCommand>(this, inputCommand);
+            CommandUtil.DebugLog($"解析结果:{back.resultStr}\n解析索引:{back.indexExecute}");
             return null;
         }
 

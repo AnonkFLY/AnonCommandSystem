@@ -3,11 +3,9 @@ using System.Collections.Generic;
 
 namespace CommandSystem
 {
-    public class ParameterStruct
-    {
-        public Type t;
-        public string parameterName;
-    }
+    /// <summary>
+    /// Core data class in this system
+    /// </summary>
     public class ReturnCommandData
     {
         /// <summary>
@@ -18,35 +16,39 @@ namespace CommandSystem
         /// <summary>
         /// Completion list
         /// </summary>
-        public List<string> completion;
+        public HashSet<string> completion;
         /// <summary>
         /// command prompt list
         /// </summary>
         public CommandPrompt prompt;
         public ReturnCommandData()
         {
-            completion = new List<string>();
+            completion = new HashSet<string>();
             prompt = new CommandPrompt();
         }
         public bool AddCompletion(string com)
         {
-            if (completion.Contains(com))
-                return false;
-            completion.Add(com);
-            return true;
+            return completion.Add(com);
         }
         public bool AddPrompt(string com)
         {
-            if (prompt.promptList.Contains(com))
-                return false;
-            prompt.promptList.Add(com);
-            return true;
+            return prompt.promptList.Add(com);
         }
+    }
+    public class ParameterStruct
+    {
+        public Type t;
+        public string parameterName;
     }
     public class CommandPrompt
     {
-        public List<string> promptList = new List<string>();
+        public HashSet<string> promptList = new HashSet<string>();
         public int colorIndex;
         public int currentIndex;
+    }
+    public class ExecuteData
+    {
+        public int indexExecute;
+        public string resultStr;
     }
 }

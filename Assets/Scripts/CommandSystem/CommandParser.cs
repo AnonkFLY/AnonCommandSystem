@@ -10,12 +10,13 @@ namespace CommandSystem
 
     public class CommandParser
     {
-        public List<CommandStruct> commandList;
+        public CommandStruct currentCommand;
+        public HashSet<CommandStruct> commandList;
         public static Dictionary<string, string> parameterDict;
         public CommandParser()
         {
             //init
-            commandList = new List<CommandStruct>();
+            commandList = new HashSet<CommandStruct>();
             parameterDict = new Dictionary<string, string>();
             //parameter dictionary
             parameterDict.Add("float", "System.Single");
@@ -28,22 +29,20 @@ namespace CommandSystem
         }
         public bool AddCommand(CommandStruct command)
         {
-            if (commandList.Contains(command))
-                return false;
-            commandList.Add(command);
-            return true;
+            return commandList.Add(command); ;
         }
         public ReturnCommandData GetCompletion(string preInput)
         {
+            currentCommand = null;
             var completionList = new ReturnCommandData();
             completionList.preInput = preInput;
             //get return data
             foreach (var item in commandList)
             {
-
                 var comm = GetCommandCompare(preInput, item.command);
                 if (comm == item.command)
                 {
+                    currentCommand = item;
                     //Analysis of command parameters
                     return item.CompareToInput(completionList);
                 }
@@ -53,6 +52,14 @@ namespace CommandSystem
                 }
             }
             return completionList;
+        }
+        public void ExecuteCommand(string preInput)
+        {
+            if (currentCommand != null)
+            {
+                //CommandUtil.DefaultExecute<typeof(currentCommand)>()
+                currentCommand.Execute(preInput);
+            }
         }
         /// <summary>
         /// Compare a command

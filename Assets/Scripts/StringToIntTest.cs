@@ -9,13 +9,14 @@ using UnityEngine;
 public class StringToIntTest : MonoBehaviour
 {
     public string str;
-    public CommandParser paeser;
+    public CommandParser parser;
     public Text candidateList;
     public InputField input;
     public string candidateWord;
     private void Awake()
     {
-        paeser = new CommandParser();
+        parser = new CommandParser();
+        var testTp = new TeleportCommand();
     }
     private void Update()
     {
@@ -33,7 +34,7 @@ public class StringToIntTest : MonoBehaviour
     }
     public void GetCommand(string input)
     {
-        var list = paeser.GetCompletion(input);
+        var list = parser.GetCompletion(input);
         StringBuilder candidate = new StringBuilder("");
         foreach (var item in list.prompt.promptList)
         {
@@ -49,6 +50,10 @@ public class StringToIntTest : MonoBehaviour
             candidate.AppendLine(item);
         }
         candidateList.text = candidate.ToString();
+    }
+    public void EnterTheInput(string input)
+    {
+        parser.ExecuteCommand(input);
     }
     public IEnumerator MoveToEnd()
     {

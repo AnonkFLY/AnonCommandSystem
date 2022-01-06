@@ -7,8 +7,6 @@ namespace CommandSystem
         public string command;
         public string expound;
         public string[] parameter;
-
-
         /// <summary>
         ///  analyze and execute
         /// </summary>
@@ -21,7 +19,8 @@ namespace CommandSystem
         /// </summary>
         /// <param name="preInput">input string</param>
         /// <returns>string after color processing</returns>
-        public abstract ReturnCommandData CompareToInput(ReturnCommandData preInput);
+        public abstract ReturnCommandData CompareToInput(ReturnCommandData resultData);
+
     }
 
 }
