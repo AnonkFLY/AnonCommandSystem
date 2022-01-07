@@ -1,12 +1,22 @@
 namespace CommandSystem
 {
-    //命令结构。将字符串传入后解析结果，并将参数返回
-    //每一个对象代表一个命令对象
+    /// <summary>
+    /// Abstract base class for all commands
+    /// </summary>
     public abstract class CommandStruct
     {
+        /// <summary>
+        /// command name,Used for prefix parsing
+        /// </summary>
         public string command;
+        /// <summary>
+        /// describe for this command
+        /// </summary>
         public string expound;
-        public string[] parameter;
+        /// <summary>
+        /// Parameter list
+        /// </summary>
+        public string[] parameters;
         /// <summary>
         ///  analyze and execute
         /// </summary>

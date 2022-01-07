@@ -15,6 +15,7 @@ namespace CommandSystem
             if (!(parameter[0] == '<' || parameter[0] == '['))
                 return input == parameter;
             var para = GetParameterStruct(parameter);
+            DebugLog($"{para.t} value is {input}");
             var parsedList = CommandParser.parameterParsed.GetInvocationList();
             foreach (Func<ParameterStruct, string, bool> item in parsedList)
             {
@@ -66,6 +67,7 @@ namespace CommandSystem
         /// <returns>TryValue(bool)</returns>
         public static bool ReflectionTryValue(ParameterStruct para, string input)
         {
+            //[bool,value]
             var parameters = new object[] { input, Activator.CreateInstance(para.t) };
             var method = para.t.GetMethod("TryParse", BindingFlags.Public | BindingFlags.Static, Type.DefaultBinder
              , new Type[] { typeof(string), para.t.MakeByRefType() }
@@ -109,7 +111,7 @@ namespace CommandSystem
             resultData.preInput = preInput;
             var result = new StringBuilder($"<color=white>{commandType.command} ");
             var inputStrs = preInput.Split(' ').Where(s => !string.IsNullOrEmpty(s)).ToArray();
-            foreach (var item in commandType.parameter)
+            foreach (var item in commandType.parameters)
             {
                 # region Append a Line
                 var paraStrs = ($"{commandType.command} {item}").Split(' ');
@@ -150,21 +152,24 @@ namespace CommandSystem
         {
             var backData = new ExecuteData();
             var inputStrs = preInput.Split(' ').Where(s => !string.IsNullOrEmpty(s)).ToArray();
-            var length = commandType.parameter.Length;
+            var length = commandType.parameters.Length;
             for (int item = 0; item < length; item++)
             {
-                var paraStrs = ($"{commandType.command} {commandType.parameter[item]}").Split(' ');
+                var paraStrs = ($"{commandType.command} {commandType.parameters[item]}").Split(' ');
                 if (paraStrs.Length < inputStrs.Length - 1)
                     continue;
                 int i = 1;
+                //DebugLog($"Parsing {item} command parameter");
                 for (; i < paraStrs.Length; i++)
                 {
+                    //DebugLog($"Parsing {item} command parameter");
                     if (inputStrs.Length > i && paraStrs.Length > i && GetTryValueType(commandType, inputStrs[i], paraStrs[i], true))
                     {
-                        DebugLog($"Parsed {inputStrs[i]} on {paraStrs[i]} successfully");
+                        DebugLog($"Parsed {inputStrs[i]} on {paraStrs[i]} successfully in {i}");
                     }
                     else
                     {
+                        //DebugLog("Parsing failed");
                         string debug;
                         if (inputStrs.Length > i && paraStrs.Length > i)
                         {
@@ -176,12 +181,13 @@ namespace CommandSystem
                         }
                         backData.resultStr = debug;
                         backData.indexExecute = item;
-                        i++;
+                        //i++;
                         break;
                     }
                 }
                 if (i >= paraStrs.Length)
                 {
+                    //DebugLog("Parsed!");
                     backData.resultStr = $"Parsing {i} successfully";
                     backData.indexExecute = item;
                     return backData;

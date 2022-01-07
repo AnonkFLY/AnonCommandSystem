@@ -237,7 +237,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c3d7427008efbd4abe3c96204ddbe06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  str: <Vector3|postion>
+  str: 
   candidateList: {fileID: 935108322}
   input: {fileID: 1685673383}
   candidateWord: 
@@ -736,7 +736,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 403655550}
-        m_TargetAssemblyTypeName: StringToIntTest, Assembly-CSharp
+        m_TargetAssemblyTypeName: TestScript, Assembly-CSharp
         m_MethodName: EnterTheInput
         m_Mode: 0
         m_Arguments:
@@ -751,7 +751,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 403655550}
-        m_TargetAssemblyTypeName: StringToIntTest, Assembly-CSharp
+        m_TargetAssemblyTypeName: TestScript, Assembly-CSharp
         m_MethodName: GetCommand
         m_Mode: 0
         m_Arguments:

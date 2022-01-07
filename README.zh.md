@@ -1,14 +1,13 @@
 # AnonCommandSystem
-
-Analysis of the command system modeled after the bedrock version of Minecraft(Waiting for translation)
+仿照Minecraft(我的世界)基岩版本的命令系统解析
 
 [中文](https://github.com/Anon-K/AnonCommandSystem/README.zh.md)
 
 [English](https://github.com/Anon-K/AnonCommandSystem/README.md)
 
-## Completed:
+## 已实现功能:
 
-Basic command analysis
+基本命令解析
 
 ```c#
 //like this
@@ -18,7 +17,7 @@ teleport
     <float:x> <float:y> <float:z>
 ```
 
-Customize your type parameter resolution
+增加自定义类型参数解析
 
 ```C#
 //like this
@@ -26,7 +25,7 @@ teleport
     <myClass:parameterName>
 ```
 
-Command completion list
+命令补全列表
 
 ```c#
 //like this
@@ -34,7 +33,7 @@ Command completion list
 >te
 ```
 
-Command prompt (without [] optional parameters)
+命令提示符(未包含[]可选参数)
 
 ```c#
 //like this
@@ -44,9 +43,9 @@ Command prompt (without [] optional parameters)
 >teleport 
 ```
 
-## Bewrite
+## 简述
 
-| class             | intention                          |
+| 类名              | 功能                               |
 | ----------------- | ---------------------------------- |
 | CommandParser     | 命令解析器,并储存命令列表数据      |
 | CommandStruct     | 所有命令的抽象类                   |
@@ -56,7 +55,7 @@ Command prompt (without [] optional parameters)
 | CommandPrompt     | 命令提示符数据                     |
 | ExecuteData       | 解析后用于判断执行的数据           |
 
-## Quick start
+## 快速开始
 
 **第一步:完成命令类**
 

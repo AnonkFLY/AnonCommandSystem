@@ -48,7 +48,7 @@ namespace CommandSystem
             //get return data
             foreach (var item in commandList)
             {
-                var comm = GetCommandCompare(preInput, item.command);
+                var comm = ParsingCommand(preInput, item.command);
                 if (comm == item.command)
                 {
                     //Analysis of command parameters
@@ -66,11 +66,10 @@ namespace CommandSystem
         {
             if (currentCommand != null)
             {
-                //CommandUtil.DefaultExecute<typeof(currentCommand)>()
                 return currentCommand.ExecuteParsing(preInput);
             }
             else
-                return "未找到命令" + preInput;
+                return "No Found " + preInput.Split(' ')[0];
         }
         public void AddCustomParameterParsing(Func<ParameterStruct, string, bool> action)
         {
@@ -88,7 +87,7 @@ namespace CommandSystem
         /// <param name="preInput"></param>
         /// <param name="command"></param>
         /// <returns></returns>
-        private string GetCommandCompare(string preInput, string command)
+        private string ParsingCommand(string preInput, string command)
         {
             //输入为空。输入一半命令，输入全命令，，， 输入命令，在其他命令是半命令
             if (string.IsNullOrEmpty(preInput))
@@ -102,7 +101,7 @@ namespace CommandSystem
             return preInput.Substring(0, length);
         }
         /// <summary>
-        /// String parsing
+        /// String parsing on Custom Parsing
         /// </summary>
         /// <param name="para"></param>
         /// <param name="input"></param>

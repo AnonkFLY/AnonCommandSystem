@@ -6,7 +6,7 @@ using UnityEngine.UI;
 using CommandSystem;
 using UnityEngine;
 
-public class StringToIntTest : MonoBehaviour
+public class TestScript : MonoBehaviour
 {
     public string str;
     public CommandParser parser;
@@ -16,8 +16,7 @@ public class StringToIntTest : MonoBehaviour
     private void Awake()
     {
         parser = new CommandParser();
-        parser.AddCustomParameterParsing(CustomParsing);
-        print(typeof(MyClass).ToString());
+        //parser.AddCustomParameterParsing(CustomParsing);
         parser.AddCustomParameterParsing<MyClass>("myclass");
     }
     private void Update()
@@ -83,12 +82,11 @@ public class MyClass : ICommandParameter<MyClass>
     {
         throw new NotImplementedException();
     }
-
     public bool TryParse(string input, out MyClass getValue)
     {
         getValue = new MyClass();
-        getValue.id = 1;
-        getValue.name = "fuck";
+        getValue.id = input.Length;
+        getValue.name = input;
         return true;
     }
 }
