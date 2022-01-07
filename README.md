@@ -2,9 +2,9 @@
 
 Analysis of the command system modeled after the bedrock version of Minecraft(Waiting for translation)
 
-[中文](https://github.com/Anon-K/AnonCommandSystem/README.zh.md)
+[中文](README.zh.md)
 
-[English](https://github.com/Anon-K/AnonCommandSystem/README.md)
+[English](README.md)
 
 ## Completed:
 
