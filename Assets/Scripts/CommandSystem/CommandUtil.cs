@@ -7,23 +7,34 @@ namespace CommandSystem
 {
     public static class CommandUtil
     {
-        public static bool GetTryValueType<T>(T command, string input, string parameter, bool isExe = false) where T : CommandStruct
+
+        public static bool GetTryValueType(CommandStruct command, string input, string parameter, bool isExe = false)
         {
             if (string.IsNullOrEmpty(input))
                 return false;
             if (!(parameter[0] == '<' || parameter[0] == '['))
                 return input == parameter;
             var para = GetParameterStruct(parameter);
+            var parsedList = CommandParser.parameterParsed.GetInvocationList();
+            foreach (Func<ParameterStruct, string, bool> item in parsedList)
+            {
+                if (item(para, input))
+                {
+                    if (isExe)
+                        ReflectionSetValue(command, para);
+                    return true;
+                }
+            }
             if (para.t != null)
             {
-                var result = ReflectionValue(para, input);
-                var able = (bool)result[1];
+                var able = ReflectionTryValue(para, input);
                 if (able && isExe)
                 {
-                    command.GetType().GetField(para.parameterName).SetValue(command, result[0]);
+                    ReflectionSetValue(command, para);
                 }
                 return able;
             }
+            DebugLog("Error:The parameter type is wrong, only [int|float|string] type, if you want to customize the type, please use [AddCustomParameterParsing] in <CommandParser>");
             return false;
         }
 
@@ -38,7 +49,13 @@ namespace CommandSystem
             var str = type.Split(':', '<', '>', '[', ']');
             //UnityEngine.Debug.Log(str[1]);
             par.parameterName = str[2];
-            par.t = Type.GetType(CommandParser.parameterDict[str[1]]);
+            if (CommandParser.parameterDict.TryGetValue(str[1], out var getValue))
+                par.t = Type.GetType(getValue);
+            if (getValue != null)
+                par.tString = getValue;
+            else
+                par.tString = str[1];
+
             return par;
         }
         /// <summary>
@@ -46,29 +63,47 @@ namespace CommandSystem
         /// </summary>
         /// <param name="para"></param>
         /// <param name="input"></param>
-        /// <returns>Value and TryValue(bool)</returns>
-        public static object[] ReflectionValue(ParameterStruct para, string input)
+        /// <returns>TryValue(bool)</returns>
+        public static bool ReflectionTryValue(ParameterStruct para, string input)
         {
-            var result = new object[2];
-            if (para.t == typeof(string))
-            {
-                result[0] = input;
-                result[1] = !string.IsNullOrEmpty(input);
-                return result;
-            }
             var parameters = new object[] { input, Activator.CreateInstance(para.t) };
             var method = para.t.GetMethod("TryParse", BindingFlags.Public | BindingFlags.Static, Type.DefaultBinder
              , new Type[] { typeof(string), para.t.MakeByRefType() }
              , new ParameterModifier[] { new ParameterModifier(2) });
+            if (method == null)
+            {
+                method = para.t.GetMethod("TryParse",
+                    BindingFlags.Public | BindingFlags.Instance,
+                    null,
+                    CallingConventions.Any,
+                    new Type[] { typeof(string), typeof(object).MakeByRefType() },
+                    null);
+            }
             if (method != null)
             {
-                result[1] = method.Invoke(null, parameters);
+                DebugLog($"{parameters[0]} and {parameters[1]}");
+                parameters[0] = method.Invoke(para.t.Assembly.CreateInstance(para.tString), parameters);
+                DebugLog($"{parameters[0]} and {parameters[1]}");
+                para.getValue = parameters[1];
             }
-            result[0] = parameters[1];
-            return result;
+            else
+            {
+                return false;
+            }
+            return (bool)parameters[0];
         }
-
-        public static ReturnCommandData DefaultAnalysis<T>(T commandType, string preInput) where T : CommandStruct
+        public static void ReflectionSetValue(CommandStruct command, ParameterStruct para)
+        {
+            try
+            {
+                command.GetType().GetField(para.parameterName).SetValue(command, para.getValue);
+            }
+            catch
+            {
+                DebugLog($"Error:{command.ToString()}:Type of conversion '{para.tString}',Value '{para.getValue}'");
+            }
+        }
+        public static ReturnCommandData DefaultAnalysis(CommandStruct commandType, string preInput)
         {
             var resultData = new ReturnCommandData();
             resultData.preInput = preInput;
@@ -83,7 +118,7 @@ namespace CommandSystem
                 int i = 1;
                 for (; i < paraStrs.Length; i++)
                 {
-                    if (inputStrs.Length > i && paraStrs.Length > i && GetTryValueType<T>(commandType, inputStrs[i], paraStrs[i]))
+                    if (inputStrs.Length > i && paraStrs.Length > i && GetTryValueType(commandType, inputStrs[i], paraStrs[i]))
                         result.Append($" {paraStrs[i]}");
                     else
                     {
@@ -111,7 +146,7 @@ namespace CommandSystem
             }
             return resultData;
         }
-        public static ExecuteData DefaultExecute<T>(T commandType, string preInput) where T : CommandStruct
+        public static ExecuteData DefaultExecute(CommandStruct commandType, string preInput)
         {
             var backData = new ExecuteData();
             var inputStrs = preInput.Split(' ').Where(s => !string.IsNullOrEmpty(s)).ToArray();
@@ -124,27 +159,54 @@ namespace CommandSystem
                 int i = 1;
                 for (; i < paraStrs.Length; i++)
                 {
-                    if (inputStrs.Length > i && paraStrs.Length > i && GetTryValueType<T>(commandType, inputStrs[i], paraStrs[i], true))
+                    if (inputStrs.Length > i && paraStrs.Length > i && GetTryValueType(commandType, inputStrs[i], paraStrs[i], true))
                     {
                         DebugLog($"Parsed {inputStrs[i]} on {paraStrs[i]} successfully");
                     }
                     else
                     {
-                        var debug = $"Parsing {inputStrs[i]} on {paraStrs[i]} failed";
+                        string debug;
+                        if (inputStrs.Length > i && paraStrs.Length > i)
+                        {
+                            debug = $"Parsing {inputStrs[i]} on {paraStrs[i]} failed";
+                        }
+                        else
+                        {
+                            debug = "Missing parameters";
+                        }
                         backData.resultStr = debug;
                         backData.indexExecute = item;
+                        i++;
                         break;
                     }
                 }
                 if (i >= paraStrs.Length)
                 {
-                    backData.resultStr = "解析成功";
+                    backData.resultStr = $"Parsing {i} successfully";
                     backData.indexExecute = item;
                     return backData;
                 }
             }
             return backData;
         }
+        // public static int ParsingCommandOnLine(CommandStruct commandType, string[] input, string[] para)
+        // {
+        //     int i = 1;
+        //     for (; i < para.Length; i++)
+        //     {
+        //         if (input.Length > i && para.Length > i && GetTryValueType(commandType, input[i], para[i], true))
+        //         {
+        //             DebugLog($"Parsed {input[i]} on {para[i]} successfully");
+        //         }
+        //         else
+        //         {
+        //             DebugLog($"Parsing {input[i]} on {para[i]} failed");
+        //             i++;
+        //         }
+        //     }
+        //     return i;
+        //     //TODO:优化上面两个像坨屎的解析函数
+        // }
         public static void DebugLog(object obj)
         {
             UnityEngine.Debug.Log(obj);

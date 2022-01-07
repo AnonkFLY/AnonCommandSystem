@@ -12,14 +12,21 @@ namespace CommandSystem
         /// </summary>
         /// <param name="inputCommand"></param>
         /// <returns>result</returns>
-        public abstract string Execute(string inputCommand);
+        public virtual string ExecuteParsing(string inputCommand)
+        {
+            return Execute(CommandUtil.DefaultExecute(this, inputCommand));
+        }
+        public abstract string Execute(ExecuteData data);
 
         /// <summary>
         /// pre input compared
         /// </summary>
         /// <param name="preInput">input string</param>
         /// <returns>string after color processing</returns>
-        public abstract ReturnCommandData CompareToInput(ReturnCommandData resultData);
+        public virtual ReturnCommandData CompareToInput(ReturnCommandData resultData)
+        {
+            return CommandUtil.DefaultAnalysis(this, resultData.preInput);
+        }
 
     }
 

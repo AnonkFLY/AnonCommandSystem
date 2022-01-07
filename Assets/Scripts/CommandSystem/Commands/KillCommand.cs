@@ -8,12 +8,8 @@ namespace CommandSystem
         {
             command = "taKill";
         }
-        public override ReturnCommandData CompareToInput(ReturnCommandData preInput)
-        {
-            throw new System.NotImplementedException();
-        }
 
-        public override string Execute(string inputCommand)
+        public override string Execute(ExecuteData data)
         {
             throw new System.NotImplementedException();
         }

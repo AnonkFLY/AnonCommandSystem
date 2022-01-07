@@ -16,7 +16,9 @@ public class StringToIntTest : MonoBehaviour
     private void Awake()
     {
         parser = new CommandParser();
-        var testTp = new TeleportCommand();
+        parser.AddCustomParameterParsing(CustomParsing);
+        print(typeof(MyClass).ToString());
+        parser.AddCustomParameterParsing<MyClass>("myclass");
     }
     private void Update()
     {
@@ -53,11 +55,40 @@ public class StringToIntTest : MonoBehaviour
     }
     public void EnterTheInput(string input)
     {
-        parser.ExecuteCommand(input);
+        var back = parser.ExecuteCommand(input);
+        //print(back);
+        this.input.text = "";
     }
     public IEnumerator MoveToEnd()
     {
         yield return new WaitForEndOfFrame();
         input.MoveTextEnd(false);
+    }
+    private bool CustomParsing(ParameterStruct para, string input)
+    {
+        if (para.tString == "custom")
+            if (int.TryParse(input, out var getValue))
+            {
+                para.getValue = getValue;
+                return true;
+            }
+        return false;
+    }
+}
+public class MyClass : ICommandParameter<MyClass>
+{
+    public int id;
+    public string name;
+    public string[] GetParameteCompletion(string preInput)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool TryParse(string input, out MyClass getValue)
+    {
+        getValue = new MyClass();
+        getValue.id = 1;
+        getValue.name = "fuck";
+        return true;
     }
 }

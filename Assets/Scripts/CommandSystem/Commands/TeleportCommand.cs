@@ -7,27 +7,23 @@ namespace CommandSystem
         public float x, y, z;
         public float qx, qy, qz;
         public string entiteName, qentiteName;
+        public MyClass cust;
         public TeleportCommand()
         {
             command = "teleport";
             parameter = new string[]{
-                "<string:entiteName>",
-                "<string:entiteName> facing <string:qentiteName>",
-                "<float:x> <float:y> <float:z> facing <float:qx> <float:qy>"
+                //"<string:entiteName>",
+                //"<string:entiteName> facing <string:qentiteName>",
+                //"<float:x> <float:y> <float:z> facing <float:qx> <float:qy>",
+                "<myclass:cust>"
             };
         }
-        public override ReturnCommandData CompareToInput(ReturnCommandData resultData)
-        {
-            var result = CommandUtil.DefaultAnalysis<TeleportCommand>(this, resultData.preInput);
-            return result;
-        }
 
-        public override string Execute(string inputCommand)
+        public override string Execute(ExecuteData data)
         {
-            var back = CommandUtil.DefaultExecute<TeleportCommand>(this, inputCommand);
-            CommandUtil.DebugLog($"解析结果:{back.resultStr}\n解析索引:{back.indexExecute}");
-            return null;
+            //CommandUtil.DebugLog($"{data.indexExecute} of {data.resultStr}");
+            UnityEngine.Debug.Log($"cust value is {cust.id} and {cust.name}");
+            return "命令未实现";
         }
-
     }
 }

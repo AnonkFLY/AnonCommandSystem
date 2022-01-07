@@ -39,6 +39,8 @@ namespace CommandSystem
     {
         public Type t;
         public string parameterName;
+        public object getValue;
+        public string tString;
     }
     public class CommandPrompt
     {

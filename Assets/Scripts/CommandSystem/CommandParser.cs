@@ -10,20 +10,29 @@ namespace CommandSystem
 
     public class CommandParser
     {
-        public CommandStruct currentCommand;
-        public HashSet<CommandStruct> commandList;
+        /// <summary>
+        /// Resolve custom types of delegates
+        /// </summary>
+        public static Func<ParameterStruct, string, bool> parameterParsed;
+        /// <summary>
+        /// Used for reflection type conversion
+        /// </summary>
         public static Dictionary<string, string> parameterDict;
+
+        private CommandStruct currentCommand;
+        private HashSet<CommandStruct> commandList;
         public CommandParser()
         {
             //init
             commandList = new HashSet<CommandStruct>();
             parameterDict = new Dictionary<string, string>();
+            parameterParsed = new Func<ParameterStruct, string, bool>(StringParsing);
             //parameter dictionary
             parameterDict.Add("float", "System.Single");
             parameterDict.Add("bool", "System.Boolean");
             parameterDict.Add("int", " System.Int32");
             parameterDict.Add("string", "System.String");
-
+            //command add
             AddCommand(new TeleportCommand());
             AddCommand(new KillCommand());
         }
@@ -42,8 +51,8 @@ namespace CommandSystem
                 var comm = GetCommandCompare(preInput, item.command);
                 if (comm == item.command)
                 {
-                    currentCommand = item;
                     //Analysis of command parameters
+                    currentCommand = item;
                     return item.CompareToInput(completionList);
                 }
                 else if (comm != null)
@@ -53,16 +62,28 @@ namespace CommandSystem
             }
             return completionList;
         }
-        public void ExecuteCommand(string preInput)
+        public string ExecuteCommand(string preInput)
         {
             if (currentCommand != null)
             {
                 //CommandUtil.DefaultExecute<typeof(currentCommand)>()
-                currentCommand.Execute(preInput);
+                return currentCommand.ExecuteParsing(preInput);
             }
+            else
+                return "未找到命令" + preInput;
+        }
+        public void AddCustomParameterParsing(Func<ParameterStruct, string, bool> action)
+        {
+            parameterParsed += action;
+        }
+        public bool AddCustomParameterParsing<T>(string keyParameter) where T : ICommandParameter<T>, new()
+        {
+            T t = new T();
+            parameterDict.Add(keyParameter, t.ToString());
+            return true;
         }
         /// <summary>
-        /// Compare a command
+        /// Compare a line command
         /// </summary>
         /// <param name="preInput"></param>
         /// <param name="command"></param>
@@ -79,6 +100,19 @@ namespace CommandSystem
                     return null;
             }
             return preInput.Substring(0, length);
+        }
+        /// <summary>
+        /// String parsing
+        /// </summary>
+        /// <param name="para"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        private bool StringParsing(ParameterStruct para, string input)
+        {
+            para.getValue = input;
+            if (para.t == typeof(string))
+                return !string.IsNullOrEmpty(input);
+            return false;
         }
     }
 
