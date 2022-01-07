@@ -109,12 +109,16 @@ namespace CommandSystem
 }
 ```
 
-**第二步:创建命令解析器并使用ParsingCommand解析命令，返回一个字符串**
+**第二步:创建命令解析器并注册命令**
+
+使用ParsingCommand解析命令，返回一个字符串
 
 *返回的字符串为重写的Execute方法的返回值*
 
 ```C#
 var parser = new CommandParser();
+//Register Kill Command
+parser.AddCommand(new KillCommand());
 var resultCount = parser.GetCompletion("kill 1");
 print(resultCount);
 //Although it can be parsed as a string, the parsing of int is in the front, so the priority is higher than the latter
@@ -125,6 +129,67 @@ print(resultName);
 //Output result:kill name of a
 //Print result:1
 ```
+
+### 使用自定义类
+
+**1.实现接口**
+
+*TryParses*为字符串作为参数转为自定义类的方法
+
+*GetParamterCompletion*为获取该自定义类补全列表的方法
+
+```C#
+namespcae CommandSystem;
+public class MyClass : ICommandParameter<MyClass>
+{
+    public int id;
+    public string name;
+    public string[] GetParameteCompletion(string preInput)
+    {
+        throw new NotImplementedException();
+    }
+    public bool TryParse(string input, out MyClass getValue)
+    {
+        getValue = new MyClass();
+        getValue.id = input.Length;
+        getValue.name = input;
+        return true;
+    }
+}
+```
+
+**2.注册类型**
+
+```C#	
+var parser = new CommandParser();
+parser.AddCustomParameterParsing<MyClass>("myclass");
+---------
+parameters = new string[]
+{
+    "<myclass:propertyName>"
+}
+---------
+```
+
+或者...你仅仅是想自定义类型名字
+
+可以使用
+
+```C#
+private bool CustomParsing(ParameterStruct para, string input)
+{
+    if (para.tString == "custom")
+        if (int.TryParse(input, out var getValue))
+        {
+            para.getValue = getValue;
+            return true;
+        }
+    return false;
+}
+parser.AddCustomParameterParsing(CustomParsing);
+```
+
+
 
 ## 将来
 
