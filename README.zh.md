@@ -1,9 +1,9 @@
 # AnonCommandSystem
 仿照Minecraft(我的世界)基岩版本的命令系统解析
 
-[中文](https://github.com/Anon-K/AnonCommandSystem/README.zh.md)
+[中文](https://github.com/Anon-K/AnonCommandSystem/blob/master/README.zh.md)
 
-[English](https://github.com/Anon-K/AnonCommandSystem/README.md)
+[English](https://github.com/Anon-K/AnonCommandSystem/blob/master/README.md)
 
 ## 已实现功能:
 
