@@ -28,10 +28,7 @@ namespace CommandSystem
             parameterDict = new Dictionary<string, string>();
             parameterParsed = new Func<ParameterStruct, string, bool>(StringParsing);
             //parameter dictionary
-            parameterDict.Add("float", "System.Single");
-            parameterDict.Add("bool", "System.Boolean");
-            parameterDict.Add("int", " System.Int32");
-            parameterDict.Add("string", "System.String");
+            InitDefaultParameter();
             //command add
             AddCommand(new TeleportCommand());
             AddCommand(new KillCommand());
@@ -80,6 +77,14 @@ namespace CommandSystem
             T t = new T();
             parameterDict.Add(keyParameter, t.ToString());
             return true;
+        }
+        private void InitDefaultParameter()
+        {
+            parameterDict.Add("string", typeof(string).ToString());
+            parameterDict.Add("int", typeof(int).ToString());
+            parameterDict.Add("float", typeof(float).ToString());
+            parameterDict.Add("byte", typeof(byte).ToString());
+            parameterDict.Add("bool", typeof(bool).ToString());
         }
         /// <summary>
         /// Compare a line command
