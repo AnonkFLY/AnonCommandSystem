@@ -37,7 +37,6 @@ namespace CommandSystem
         {
             return CommandUtil.DefaultAnalysis(this, resultData.preInput);
         }
-
     }
 
 }

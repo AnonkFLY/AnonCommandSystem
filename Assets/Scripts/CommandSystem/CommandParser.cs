@@ -35,7 +35,7 @@ namespace CommandSystem
         }
         public bool AddCommand(CommandStruct command)
         {
-            return commandList.Add(command); ;
+            return commandList.Add(command);
         }
         public ReturnCommandData GetCompletion(string preInput)
         {
@@ -54,7 +54,7 @@ namespace CommandSystem
                 }
                 else if (comm != null)
                 {
-                    completionList.completion.Add(item.command);
+                    completionList.AddCompletion(item.command);
                 }
             }
             return completionList;
@@ -68,6 +68,10 @@ namespace CommandSystem
             else
                 return "No Found " + preInput.Split(' ')[0];
         }
+        /// <summary>
+        /// Add custom type names,no completion
+        /// </summary>
+        /// <param name="action">Parsing Func</param>
         public void AddCustomParameterParsing(Func<ParameterStruct, string, bool> action)
         {
             parameterParsed += action;
@@ -94,6 +98,9 @@ namespace CommandSystem
         /// <returns></returns>
         private string ParsingCommand(string preInput, string command)
         {
+            preInput = preInput.Split(' ')[0];
+            if (preInput.Length > command.Length)
+                return null;
             //输入为空。输入一半命令，输入全命令，，， 输入命令，在其他命令是半命令
             if (string.IsNullOrEmpty(preInput))
                 return null;

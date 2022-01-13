@@ -2,20 +2,24 @@ using System.Linq;
 using System;
 using System.Reflection;
 using System.Text;
+using System.Runtime.InteropServices;
 
 namespace CommandSystem
 {
     public static class CommandUtil
     {
-
-        public static bool GetTryValueType(CommandStruct command, string input, string parameter, bool isExe = false)
+        public static string startColor = "<color=white>";
+        public static string currentParameterColor = "<color=red>";
+        public static string remainingParameterColor = "<color=grey>";
+        public static string overColor = "</color>";
+        public static bool GetTryValueType(CommandStruct command, string input, string parameter, ReturnCommandData returnData = null, bool isExe = false)
         {
             if (string.IsNullOrEmpty(input))
                 return false;
             if (!(parameter[0] == '<' || parameter[0] == '['))
                 return input == parameter;
             var para = GetParameterStruct(parameter);
-            DebugLog($"{para.t} value is {input}");
+            //DebugLog($"{para.t} value is {input}");
             var parsedList = CommandParser.parameterParsed.GetInvocationList();
             foreach (Func<ParameterStruct, string, bool> item in parsedList)
             {
@@ -28,19 +32,18 @@ namespace CommandSystem
             }
             if (para.t != null)
             {
-                var able = ReflectionTryValue(para, input);
+                var able = ReflectionTryValue(para, input, returnData);
                 if (able && isExe)
                 {
                     ReflectionSetValue(command, para);
                 }
                 return able;
             }
-            DebugLog("Error:The parameter type is wrong, only [int|float|string] type, if you want to customize the type, please use [AddCustomParameterParsing] in <CommandParser>");
+            DebugLog("Error:The parameter type is wrong, only [int|float|string|bool|byte] type, if you want to customize the type, please use [AddCustomParameterParsing] in <CommandParser>");
             return false;
         }
-
         /// <summary>
-        /// like this "<string|entityName>"
+        /// Parsing like this "<string|entityName>"
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
@@ -65,27 +68,23 @@ namespace CommandSystem
         /// <param name="para"></param>
         /// <param name="input"></param>
         /// <returns>TryValue(bool)</returns>
-        public static bool ReflectionTryValue(ParameterStruct para, string input)
+        public static bool ReflectionTryValue(ParameterStruct para, string input, ReturnCommandData data = null)
         {
             //[bool,value]
             var parameters = new object[] { input, Activator.CreateInstance(para.t) };
-            var method = para.t.GetMethod("TryParse", BindingFlags.Public | BindingFlags.Static, Type.DefaultBinder
-             , new Type[] { typeof(string), para.t.MakeByRefType() }
-             , new ParameterModifier[] { new ParameterModifier(2) });
+            var method = GetStaticTryParse(para.t);
             if (method == null)
             {
-                method = para.t.GetMethod("TryParse",
-                    BindingFlags.Public | BindingFlags.Instance,
-                    null,
-                    CallingConventions.Any,
-                    new Type[] { typeof(string), typeof(object).MakeByRefType() },
-                    null);
+                var methods = GetParameterInterface(para.t);
+                method = methods[0];
+                if (data != null)
+                {
+                    data.SetCompletion((string[])methods[1].Invoke(parameters[1], new object[] { input }));
+                }
             }
             if (method != null)
             {
-                DebugLog($"{parameters[0]} and {parameters[1]}");
-                parameters[0] = method.Invoke(para.t.Assembly.CreateInstance(para.tString), parameters);
-                DebugLog($"{parameters[0]} and {parameters[1]}");
+                parameters[0] = method.Invoke(parameters[1], parameters);
                 para.getValue = parameters[1];
             }
             else
@@ -109,22 +108,24 @@ namespace CommandSystem
         {
             var resultData = new ReturnCommandData();
             resultData.preInput = preInput;
-            var result = new StringBuilder($"<color=white>{commandType.command} ");
+            var result = new StringBuilder($"{startColor}{commandType.command} ");
             var inputStrs = preInput.Split(' ').Where(s => !string.IsNullOrEmpty(s)).ToArray();
             foreach (var item in commandType.parameters)
             {
                 # region Append a Line
                 var paraStrs = ($"{commandType.command} {item}").Split(' ');
-                if (paraStrs.Length < inputStrs.Length - 1)
+                if (paraStrs.Length < inputStrs.Length)
                     continue;
                 int i = 1;
                 for (; i < paraStrs.Length; i++)
                 {
-                    if (inputStrs.Length > i && paraStrs.Length > i && GetTryValueType(commandType, inputStrs[i], paraStrs[i]))
+                    if (inputStrs.Length > i && paraStrs.Length > i && GetTryValueType(commandType, inputStrs[i], paraStrs[i], resultData))
                         result.Append($" {paraStrs[i]}");
                     else
                     {
-                        result.Append("</color><color=red>");
+                        if (!string.IsNullOrEmpty(startColor))
+                            result.Append(overColor);
+                        result.Append(currentParameterColor);
                         result.Append($" {paraStrs[i]}");
                         i++;
                         break;
@@ -133,18 +134,20 @@ namespace CommandSystem
                 if (inputStrs.Length > i)
                 {
                     result.Clear();
-                    result.Append($"<color=white>{commandType.command} ");
+                    result.Append($"{startColor}{commandType.command} ");
                     continue;
                 }
-                result.Append("</color>");
+                result.Append(overColor);
+                result.Append(remainingParameterColor);
                 for (; i < paraStrs.Length; i++)
                 {
                     result.Append($" {paraStrs[i]}");
                 }
+                result.Append(overColor);
                 # endregion
-                resultData.AddCompletion(result.ToString());
+                resultData.AddPrompt(result.ToString());
                 result.Clear();
-                result.Append($"<color=white>{commandType.command} ");
+                result.Append($"{startColor}{commandType.command} ");
             }
             return resultData;
         }
@@ -156,16 +159,23 @@ namespace CommandSystem
             for (int item = 0; item < length; item++)
             {
                 var paraStrs = ($"{commandType.command} {commandType.parameters[item]}").Split(' ');
-                if (paraStrs.Length < inputStrs.Length - 1)
+                if (paraStrs.Length < inputStrs.Length)
+                {
+                    if (item == length - 1)
+                    {
+                        backData.resultStr = "No command found with corresponding syntax";
+                        backData.indexExecute = -1;
+                    }
                     continue;
+                }
                 int i = 1;
                 //DebugLog($"Parsing {item} command parameter");
                 for (; i < paraStrs.Length; i++)
                 {
                     //DebugLog($"Parsing {item} command parameter");
-                    if (inputStrs.Length > i && paraStrs.Length > i && GetTryValueType(commandType, inputStrs[i], paraStrs[i], true))
+                    if (inputStrs.Length > i && paraStrs.Length > i && GetTryValueType(commandType, inputStrs[i], paraStrs[i], isExe: true))
                     {
-                        DebugLog($"Parsed {inputStrs[i]} on {paraStrs[i]} successfully in {i}");
+                        //DebugLog($"Parsed {inputStrs[i]} on {paraStrs[i]} successfully in {i}");
                     }
                     else
                     {
@@ -180,7 +190,7 @@ namespace CommandSystem
                             debug = "Missing parameters";
                         }
                         backData.resultStr = debug;
-                        backData.indexExecute = item;
+                        backData.indexExecute = -1;
                         //i++;
                         break;
                     }
@@ -188,7 +198,7 @@ namespace CommandSystem
                 if (i >= paraStrs.Length)
                 {
                     //DebugLog("Parsed!");
-                    backData.resultStr = $"Parsing {i} successfully";
+                    backData.resultStr = $"Successfully parsed {i} parameters";
                     backData.indexExecute = item;
                     return backData;
                 }
@@ -211,8 +221,40 @@ namespace CommandSystem
         //         }
         //     }
         //     return i;
-        //     //TODO:优化上面两个像坨屎的解析函数
+        //     //TODO:优化上面两个像坨屎的解析函数失败，有生之年
         // }
+        private static MethodInfo GetStaticTryParse(Type type)
+        {
+            return type.GetMethod("TryParse", BindingFlags.Public | BindingFlags.Static, Type.DefaultBinder
+             , new Type[] { typeof(string), type.MakeByRefType() }
+             , new ParameterModifier[] { new ParameterModifier(2) });
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns> TryParse and GetParameterCompletion</returns>
+        private static MethodInfo[] GetParameterInterface(Type type)
+        {
+            var parameterList = new MethodInfo[2];
+            parameterList[0] = type.GetMethod("TryParse",
+                BindingFlags.Public | BindingFlags.Instance,
+                null,
+                CallingConventions.Any,
+                new Type[] { typeof(string), typeof(object).MakeByRefType() },
+                null);
+            parameterList[1] = type.GetMethod("GetParameteCompletion",
+                    BindingFlags.Public | BindingFlags.Instance,
+                    null,
+                    CallingConventions.Any,
+                    new Type[] { typeof(string) },
+                    null);
+            return parameterList;
+        }
+        /// <summary>
+        /// Change it to suit you
+        /// </summary>
+        /// <param name="obj"></param>
         public static void DebugLog(object obj)
         {
             UnityEngine.Debug.Log(obj);

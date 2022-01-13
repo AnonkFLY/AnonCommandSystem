@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Xml;
 using System;
 using System.Collections;
@@ -17,7 +18,7 @@ public class TestScript : MonoBehaviour
     {
         parser = new CommandParser();
         //parser.AddCustomParameterParsing(CustomParsing);
-        parser.AddCustomParameterParsing<MyClass>("myclass");
+        parser.AddCustomParameterParsing<MyClass>("Custom");
     }
     private void Update()
     {
@@ -37,12 +38,6 @@ public class TestScript : MonoBehaviour
     {
         var list = parser.GetCompletion(input);
         StringBuilder candidate = new StringBuilder("");
-        foreach (var item in list.prompt.promptList)
-        {
-            candidate.AppendLine(item);
-        }
-        // if (list != null && list.Length > 0)
-        //     candidateWord = list[list.Length - 1].completion.Remove(0, input.Length);
         foreach (var item in list.completion)
         {
             // if (item. != -1)
@@ -50,6 +45,14 @@ public class TestScript : MonoBehaviour
             // else
             candidate.AppendLine(item);
         }
+        candidate.AppendLine("Prompt:");
+        foreach (var item in list.promptList)
+        {
+            candidate.AppendLine(item);
+        }
+        // if (list != null && list.Length > 0)
+        //     candidateWord = list[list.Length - 1].completion.Remove(0, input.Length);
+
         candidateList.text = candidate.ToString();
     }
     public void EnterTheInput(string input)
@@ -63,16 +66,16 @@ public class TestScript : MonoBehaviour
         yield return new WaitForEndOfFrame();
         input.MoveTextEnd(false);
     }
-    private bool CustomParsing(ParameterStruct para, string input)
-    {
-        if (para.tString == "custom")
-            if (int.TryParse(input, out var getValue))
-            {
-                para.getValue = getValue;
-                return true;
-            }
-        return false;
-    }
+    // private bool CustomParsing(ParameterStruct para, string input)
+    // {
+    //     if (para.tString == "custom")
+    //         if (int.TryParse(input, out var getValue))
+    //         {
+    //             para.getValue = getValue;
+    //             return true;
+    //         }
+    //     return false;
+    // }
 }
 public class MyClass : ICommandParameter<MyClass>
 {
@@ -80,7 +83,8 @@ public class MyClass : ICommandParameter<MyClass>
     public string name;
     public string[] GetParameteCompletion(string preInput)
     {
-        throw new NotImplementedException();
+        UnityEngine.Debug.Log(preInput);
+        return new string[] { "A", "B" };
     }
     public bool TryParse(string input, out MyClass getValue)
     {
