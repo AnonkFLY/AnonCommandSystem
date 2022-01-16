@@ -125,8 +125,8 @@ namespace CommandSystem
         private bool StringParsing(ParameterStruct para, string input)
         {
             para.getValue = input;
-            if (para.t == typeof(string))
-                return !string.IsNullOrEmpty(input);
+            if (para.t == typeof(string) && input != " ")
+                return true;
             return false;
         }
     }

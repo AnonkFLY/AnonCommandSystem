@@ -13,11 +13,15 @@ public class TestScript : MonoBehaviour
     public CommandParser parser;
     public Text candidateList;
     public InputField input;
-    public SelectorParameter selectorTest;
     public string candidateWord;
     private void Awake()
     {
         parser = new CommandParser();
+        print(string.IsNullOrEmpty(" "));
+        TestSystem();
+    }
+    private void TestSystem()
+    {
         var i = TestCommandSystem();
         if (i == -1)
         {
@@ -56,6 +60,8 @@ public class TestScript : MonoBehaviour
         {
             candidate.AppendLine(item);
         }
+        candidate.AppendLine("Current:");
+        candidate.AppendLine(list.current);
         // if (list != null && list.Length > 0)
         //     candidateWord = list[list.Length - 1].completion.Remove(0, input.Length);
 
@@ -91,16 +97,20 @@ public class TestScript : MonoBehaviour
             "teleport 1",
             "teleport @a",
             "teleport @e[c=1]",
-            "teleport @e[=1] facing @a"
+            "teleport @e[=1] facing @a",
+            "teleport 1 2 3 a",
+            "teleport 1 2  3"
         };
         var bools = new string[]
         {
-            "3",
+            "4",
             "-1",
             "1",
             "0",
             "0",
-            "-1"
+            "-1",
+            "3",
+            "3"
         };
         for (int i = 0; i < commands.Length; i++)
         {

@@ -9,6 +9,7 @@ namespace CommandSystem
         public float qx, qy;
         public SelectorParameter entiteName, qentiteName;
         public string cust;
+        public string mode;
         public TeleportCommand()
         {
             command = "teleport";
@@ -16,6 +17,7 @@ namespace CommandSystem
                 "<Selector:entiteName>",
                 "<string:cust>",
                 "<Selector:entiteName> facing <Selector:qentiteName>",
+                "<float:x> <float:y> <float:z> [replace|moved|keep|abab:mode]",
                 "<float:x> <float:y> <float:z> facing <float:qx> <float:qy>"
             };
         }

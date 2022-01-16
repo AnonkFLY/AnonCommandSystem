@@ -39,7 +39,7 @@ namespace CommandSystem
                 }
                 return true;
             }
-            catch (System.Exception e)
+            catch
             {
                 return false;
             }
