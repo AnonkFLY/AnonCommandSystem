@@ -13,19 +13,25 @@ public class TestScript : MonoBehaviour
     public CommandParser parser;
     public Text candidateList;
     public InputField input;
+    public SelectorParameter selectorTest;
     public string candidateWord;
     private void Awake()
     {
         parser = new CommandParser();
-        //parser.AddCustomParameterParsing(CustomParsing);
-        parser.AddCustomParameterParsing<MyClass>("Custom");
+        var i = TestCommandSystem();
+        if (i == -1)
+        {
+            print("Command System 正常");
+        }
+        else
+        {
+            print($"Command System 出错:错误代码:{i}");
+        }
     }
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Tab))
+        if (Input.GetKeyDown(KeyCode.Return))
         {
-            input.text += candidateWord;
-            StartCoroutine(MoveToEnd());
             // var tes = str.Split(new char[] { '|', '<', '>' });
             // tes = tes.Where(s => !string.IsNullOrEmpty(s)).ToArray();
             // foreach (var item in tes)
@@ -58,7 +64,7 @@ public class TestScript : MonoBehaviour
     public void EnterTheInput(string input)
     {
         var back = parser.ExecuteCommand(input);
-        //print(back);
+        print(back);
         this.input.text = "";
     }
     public IEnumerator MoveToEnd()
@@ -76,6 +82,37 @@ public class TestScript : MonoBehaviour
     //         }
     //     return false;
     // }
+    public int TestCommandSystem()
+    {
+        var commands = new string[]
+        {
+            "teleport 1 2 3 facing 1 23",
+            "teleport",
+            "teleport 1",
+            "teleport @a",
+            "teleport @e[c=1]",
+            "teleport @e[=1] facing @a"
+        };
+        var bools = new string[]
+        {
+            "3",
+            "-1",
+            "1",
+            "0",
+            "0",
+            "-1"
+        };
+        for (int i = 0; i < commands.Length; i++)
+        {
+            parser.GetCompletion(commands[i]);
+            var result = parser.ExecuteCommand(commands[i]);
+            if (result != bools[i])
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
 }
 public class MyClass : ICommandParameter<MyClass>
 {
@@ -93,4 +130,5 @@ public class MyClass : ICommandParameter<MyClass>
         getValue.name = input;
         return true;
     }
+
 }

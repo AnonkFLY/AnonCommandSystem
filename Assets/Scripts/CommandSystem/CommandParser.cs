@@ -32,6 +32,8 @@ namespace CommandSystem
             //command add
             AddCommand(new TeleportCommand());
             AddCommand(new KillCommand());
+            //Parameter type add
+            AddCustomParameterParsing<SelectorParameter>("Selector");
         }
         public bool AddCommand(CommandStruct command)
         {
@@ -59,11 +61,11 @@ namespace CommandSystem
             }
             return completionList;
         }
-        public string ExecuteCommand(string preInput)
+        public string ExecuteCommand(string preInput, ExecutionTarget target = null)
         {
             if (currentCommand != null)
             {
-                return currentCommand.ExecuteParsing(preInput);
+                return currentCommand.ExecuteParsing(preInput, target);
             }
             else
                 return "No Found " + preInput.Split(' ')[0];
@@ -101,6 +103,8 @@ namespace CommandSystem
             preInput = preInput.Split(' ')[0];
             if (preInput.Length > command.Length)
                 return null;
+            if (preInput == command)
+                return command;
             //输入为空。输入一半命令，输入全命令，，， 输入命令，在其他命令是半命令
             if (string.IsNullOrEmpty(preInput))
                 return null;
