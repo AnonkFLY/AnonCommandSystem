@@ -21,6 +21,7 @@ namespace CommandSystem
 
         private CommandStruct currentCommand;
         private HashSet<CommandStruct> commandList;
+        private string preInput = " ";
         public CommandParser()
         {
             //init
@@ -39,11 +40,11 @@ namespace CommandSystem
         {
             return commandList.Add(command);
         }
-        public ReturnCommandData GetCompletion(string preInput)
+        public ReturnCommandData GetCompletion(string preInput, ExecutionTarget target = null)
         {
+            this.preInput = preInput;
             currentCommand = null;
             var completionList = new ReturnCommandData();
-            completionList.preInput = preInput;
             //get return data
             foreach (var item in commandList)
             {
@@ -52,7 +53,7 @@ namespace CommandSystem
                 {
                     //Analysis of command parameters
                     currentCommand = item;
-                    return item.CompareToInput(completionList);
+                    return item.CompareToInput(preInput, target);
                 }
                 else if (comm != null)
                 {
@@ -61,14 +62,14 @@ namespace CommandSystem
             }
             return completionList;
         }
-        public string ExecuteCommand(string preInput, ExecutionTarget target = null)
+        public string ExecuteCommand()
         {
             if (currentCommand != null)
             {
-                return currentCommand.ExecuteParsing(preInput, target);
+                return currentCommand.ExecuteParsing();
             }
             else
-                return "No Found " + preInput.Split(' ')[0];
+                return "No Found " + preInput.Split(' ')[0] + " Command";
         }
         /// <summary>
         /// Add custom type names,no completion
@@ -125,7 +126,7 @@ namespace CommandSystem
         private bool StringParsing(ParameterStruct para, string input)
         {
             para.getValue = input;
-            if (para.t == typeof(string) && input != " ")
+            if (para.t == typeof(string) && input != "")
                 return true;
             return false;
         }

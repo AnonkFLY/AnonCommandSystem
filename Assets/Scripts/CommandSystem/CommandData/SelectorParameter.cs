@@ -50,14 +50,14 @@ namespace CommandSystem
             parameterName = keyValue[0];
             try
             {
-                if (!CommandUtil.BaseParameterParsing(keyValue[1], $"<{GetSelectorParameterType(keyValue[0]).ToString()}:{keyValue[0]}>", out var para))
-                    return false;
-                return CommandUtil.GetTryValueType(this, para, isSetValue: true);
+                // if (!CommandUtil.BaseParameterParsing(keyValue[1], $"<{GetSelectorParameterType(keyValue[0]).ToString()}:{keyValue[0]}>", out var para))
+                //     return false;
+                //return CommandUtil.GetTryValueType(this, para, isSetValue: true);
             }
             catch
             {
-                return false;
             }
+            return false;
         }
         private Type GetSelectorParameterType(string parameterName)
         {

@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using System;
 using System.Collections.Generic;
 
@@ -8,11 +9,7 @@ namespace CommandSystem
     /// </summary>
     public class ReturnCommandData
     {
-        /// <summary>
-        /// Pre-Input
-        /// </summary>
-        public string preInput;
-        public string current;
+        public ParsingData parsingData;
         /// <summary>
         /// Completion list
         /// </summary>
@@ -21,7 +18,7 @@ namespace CommandSystem
         /// command prompt list
         /// </summary>
         public HashSet<string> promptList;
-        public string[] GetStringArray()
+        public string[] GetPromptStringArray()
         {
             string[] stringList = new string[promptList.Count];
             promptList.CopyTo(stringList);
@@ -46,7 +43,6 @@ namespace CommandSystem
         /// <param name="completionList"></param>
         public void AddCompletion(string[] completionList)
         {
-            //            UnityEngine.Debug.Log($"添加{completionList[0]}..");
             var merge = new string[completion.Count + completionList.Length];
             completion.CopyTo(merge, 0);
             completionList.CopyTo(merge, completion.Count);
@@ -64,32 +60,20 @@ namespace CommandSystem
         {
             return promptList.Add(com);
         }
+        public void SetParsingData(ParsingData data)
+        {
+            if (parsingData == null || !parsingData.IsParameterResult())
+                parsingData = data;
+        }
     }
     public class ParameterStruct
     {
-        public Type t;
         public string parameterName;
+        public string strType;
+        public string strValue;
+        public Type t;
         public object getValue;
-        public string tType;
-        public string tValue;
-        public ParameterType type = ParameterType.Required;
-    }
-    public class ExecuteData
-    {
-        /// <summary>
-        /// Executed syntax index，execution failed as -1
-        /// </summary>
-        public int indexExecute;
-        /// <summary>
-        /// Parsing result
-        /// </summary>
-        public string resultStr;
-        public ExecuteData SetValue(int index, string result)
-        {
-            this.indexExecute = index;
-            this.resultStr = result;
-            return this;
-        }
+        public ParameterType paraType;
     }
     public class ExecutionTarget
     {
@@ -101,5 +85,18 @@ namespace CommandSystem
         Required,
         Optional,
         SyntaxOptions
+    }
+    public class ParsingData
+    {
+        public int indexExecute;
+        public ExecutionTarget target;
+        public string parsingResult;
+        public int parsIndex;
+        public ParameterStruct[] paraList;
+        public ParameterStruct currentPara;
+        public bool IsParameterResult()
+        {
+            return paraList.Length == parsIndex;
+        }
     }
 }

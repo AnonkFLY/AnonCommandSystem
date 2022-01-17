@@ -13,9 +13,9 @@ namespace CommandSystem
             };
         }
 
-        public override string Execute(ExecuteData data)
+        public override string Execute(ParsingData data)
         {
-            CommandUtil.DebugLog($"execute index is {data.indexExecute},Results of the {data.resultStr}");
+            CommandUtil.DebugLog($"execute index is {data.indexExecute},Results of the {data.parsingResult}");
             switch (data.indexExecute)
             {
                 case 0:

@@ -14,17 +14,17 @@ namespace CommandSystem
         {
             command = "teleport";
             parameters = new string[]{
-                "<Selector:entiteName>",
-                "<string:cust>",
-                "<Selector:entiteName> facing <Selector:qentiteName>",
-                "<float:x> <float:y> <float:z> [replace|moved|keep|abab:mode]",
+                // "<Selector:entiteName>",
+                // "<string:cust>",
+                //"<Selector:entiteName> facing <Selector:qentiteName>"
+                // "<float:x> <float:y> <float:z> [replace|moved|keep|abab:mode]",
                 "<float:x> <float:y> <float:z> facing <float:qx> <float:qy>"
             };
         }
 
-        public override string Execute(ExecuteData data)
+        public override string Execute(ParsingData data)
         {
-            UnityEngine.Debug.Log($"{data.resultStr}");
+            UnityEngine.Debug.Log($"{data.parsingResult}");
             // if (data.indexExecute == -1)
             // {
             //     return "Parsing failed";

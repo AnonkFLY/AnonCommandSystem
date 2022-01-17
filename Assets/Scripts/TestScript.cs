@@ -6,6 +6,7 @@ using System.Text;
 using UnityEngine.UI;
 using CommandSystem;
 using UnityEngine;
+using UnityEditor;
 
 public class TestScript : MonoBehaviour
 {
@@ -14,11 +15,21 @@ public class TestScript : MonoBehaviour
     public Text candidateList;
     public InputField input;
     public string candidateWord;
+    [MenuItem("Debug/Button")]
+    public static void DebugButton()
+    {
+        print(string.IsNullOrEmpty(""));
+    }
     private void Awake()
     {
         parser = new CommandParser();
-        print(string.IsNullOrEmpty(" "));
-        TestSystem();
+
+        // var method = CommandUtil.GetStaticTryParse(typeof(int));
+        // var objs = new object[] { "1", 0 };
+        // var b =  method.Invoke(objs[1],objs);
+        // print($"{b} and {objs[1]}");
+
+        //TestSystem();
     }
     private void TestSystem()
     {
@@ -60,8 +71,6 @@ public class TestScript : MonoBehaviour
         {
             candidate.AppendLine(item);
         }
-        candidate.AppendLine("Current:");
-        candidate.AppendLine(list.current);
         // if (list != null && list.Length > 0)
         //     candidateWord = list[list.Length - 1].completion.Remove(0, input.Length);
 
@@ -69,7 +78,7 @@ public class TestScript : MonoBehaviour
     }
     public void EnterTheInput(string input)
     {
-        var back = parser.ExecuteCommand(input);
+        var back = parser.ExecuteCommand();
         print(back);
         this.input.text = "";
     }
@@ -115,7 +124,7 @@ public class TestScript : MonoBehaviour
         for (int i = 0; i < commands.Length; i++)
         {
             parser.GetCompletion(commands[i]);
-            var result = parser.ExecuteCommand(commands[i]);
+            var result = parser.ExecuteCommand();
             if (result != bools[i])
             {
                 return i;

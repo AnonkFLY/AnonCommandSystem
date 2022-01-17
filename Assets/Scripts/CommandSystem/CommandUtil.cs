@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using System.Collections.Generic;
 using System.Linq;
 using System;
@@ -14,85 +15,55 @@ namespace CommandSystem
         public static string remainingParameterColor = "<color=grey>";
         public static string optionalParameterColor = "<color=grey>";
         public static string overColor = "</color>";
-        public static bool BaseParameterParsing(string input, string parameter, out ParameterStruct para)
+        /// <summary>
+        /// compara <xx:xx> and input
+        /// </summary>
+        /// <param name="para"></param>
+        /// <returns></returns>
+        public static bool CompareParameterOnInput(ParameterStruct para)
         {
-            para = GetParameterStruct(parameter, input);
-            if (string.IsNullOrEmpty(input) && para.type != ParameterType.Optional)
-                return false;
-            return true;
+            switch (para.paraType)
+            {
+                case ParameterType.SyntaxOptions:
+                    return para.strType == para.strValue;
+                case ParameterType.Required:
+                    return CompareToRequiredParameter(para);
+                case ParameterType.Optional:
+                    return ComparaToOptionalParameter(para);
+            }
+            DebugLog("Error:Not Found Parameter Type");
+            return false;
         }
-        public static bool GetTryValueType<T>(T obj, ParameterStruct para, ReturnCommandData returnData = null, bool isSetValue = false)
-        {
-            UnityEngine.Debug.Log($"[{para.tValue},{para.type}]");
-            if (para.type == ParameterType.SyntaxOptions)
-            {
-                if (returnData != null)
-                    returnData.AddCompletion(para.tType);
-                return para.tType == para.tValue;
-            }
-            else if (para.type == ParameterType.Optional)
-            {
-                return GetOptionalParameter(obj, para, returnData, isSetValue);
-            }
-            else
-            {
-                if (string.IsNullOrEmpty(para.tValue))
-                    return false;
-                return GetValueAndType(obj, para, returnData, isSetValue);
-            }
-        }
-        public static bool GetValueAndType<T>(T obj, ParameterStruct para, ReturnCommandData returnData = null, bool isSetValue = false)
+        public static bool CompareToRequiredParameter(ParameterStruct para)
         {
             var parsedList = CommandParser.parameterParsed.GetInvocationList();
 
             foreach (Func<ParameterStruct, string, bool> item in parsedList)
             {
-                if (item(para, para.tValue))
+                if (item(para, para.strValue))
                 {
-                    if (isSetValue)
-                        return ReflectionSetValue(obj, para.parameterName, para.getValue);
                     return true;
                 }
             }
             if (para.t != null)
             {
-                var able = ReflectionTryValue(para, para.tValue, returnData);
-                if (able && isSetValue)
-                {
-                    return ReflectionSetValue(obj, para.parameterName, para.getValue);
-                }
-                return able;
+                return ReflectionCompareValue(para);
             }
             DebugLog("Error:The parameter type is wrong, only [int|float|string|bool|byte] type, if you want to customize the type, please use [AddCustomParameterParsing] in <CommandParser>");
             return false;
         }
-        public static bool GetOptionalParameter<T>(T obj, ParameterStruct para, ReturnCommandData returnData = null, bool isSetValue = false)
+        public static bool ComparaToOptionalParameter(ParameterStruct para)
         {
-            var parameter = para.tType;
+            var parameter = para.strType;
             var optionalParameter = new List<string>(parameter.Split('|', ':'));
             //if [destroy|replace|moved:mode] on public string mode;
             if (optionalParameter.Count > 2)
             {
-
-                if (optionalParameter.Contains(para.tValue))
-                {
-                    if (isSetValue)
-                        ReflectionSetValue(obj, optionalParameter[optionalParameter.Count - 1], para.tValue);
-                    return true;
-                }
-                else
-                {
-                    if (returnData != null)
-                    {
-                        optionalParameter.RemoveAt(optionalParameter.Count - 1);
-                        returnData.AddCompletion(optionalParameter.ToArray());
-                    }
-                    return false;
-                }
+                return optionalParameter.Contains(para.strValue);
             }
             else
             {
-                return GetValueAndType(obj, para, returnData, isSetValue);
+                return false;
             }
         }
         /// <summary>
@@ -100,32 +71,31 @@ namespace CommandSystem
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static ParameterStruct GetParameterStruct(string type, string input)
+        public static ParameterStruct GetParameterStruct(string type)
         {
             ParameterStruct par = new ParameterStruct();
-            par.tValue = input;
-            par.tType = type;
             switch (type[0])
             {
                 case '<':
-                    par.type = ParameterType.Required;
+                    par.paraType = ParameterType.Required;
                     break;
                 case '[':
-                    par.type = ParameterType.Optional;
+                    par.paraType = ParameterType.Optional;
                     break;
                 default:
-                    par.type = ParameterType.SyntaxOptions;
+                    par.paraType = ParameterType.SyntaxOptions;
+                    par.strType = type;
                     return par;
             }
-            var str = type.Split(':', '<', '>', '[', ']').Where(s => !string.IsNullOrEmpty(s)).ToArray();
-            par.parameterName = str[1];
-            par.tType = str[0];
-            if (CommandParser.parameterDict.TryGetValue(str[0], out var getValue))
+            var strs = type.Split(new char[] { ':', '<', '>', '[', ']' }, StringSplitOptions.RemoveEmptyEntries);
+            par.parameterName = strs[1];
+            par.strType = strs[0];
+            if (CommandParser.parameterDict.TryGetValue(strs[0], out var getValue))
                 par.t = Type.GetType(getValue);
             else
-                par.t = Type.GetType(str[0]);
+                par.t = Type.GetType(strs[0]);
             if (getValue != null)
-                par.tType = getValue;
+                par.strType = getValue;
             return par;
         }
         /// <summary>
@@ -134,13 +104,11 @@ namespace CommandSystem
         /// <param name="para"></param>
         /// <param name="input"></param>
         /// <returns>TryValue(bool)</returns>
-        public static bool ReflectionTryValue(ParameterStruct para, string input, ReturnCommandData data = null)
+        public static bool ReflectionCompareValue(ParameterStruct para)
         {
-            //[bool,value]
-            //            UnityEngine.Debug.Log(para.t);
             if (para.t == typeof(string))
                 return false;
-            var parameters = new object[] { input, null };
+            var parameters = new object[] { para.strValue, null };
             if (!para.t.ContainsGenericParameters)
                 parameters[1] = Activator.CreateInstance(para.t);
             var method = GetStaticTryParse(para.t);
@@ -148,10 +116,6 @@ namespace CommandSystem
             {
                 var methods = GetParameterInterface(para.t);
                 method = methods[0];
-                if (data != null)
-                {
-                    data.SetCompletion((string[])methods[1].Invoke(parameters[1], new object[] { input }));
-                }
             }
             if (method != null)
             {
@@ -177,157 +141,117 @@ namespace CommandSystem
                 return false;
             }
         }
-        public static ReturnCommandData DefaultAnalysis(CommandStruct commandType, string preInput)
+        public static ReturnCommandData DefaultAnalysis(CommandStruct commandType, string preInput, ExecutionTarget target)
         {
             var resultData = new ReturnCommandData();
-            resultData.preInput = preInput;
-            var defaultCommand = $"{startColor}{commandType.command} ";
-            var result = new StringBuilder(defaultCommand);
-            var inputStrs = preInput.Split(' ').Where(s => !string.IsNullOrEmpty(s)).ToArray();
-            foreach (var item in commandType.parameters)
+            var promptBuilder = new StringBuilder();
+            var defaultCommad = $"{startColor}{commandType.command} ";
+            for (int i = 0; i < commandType.parameters.Length; i++)
             {
-                # region Append a Line
-                var paraStrs = ($"{commandType.command} {item}").Split(' ');
-                if (paraStrs.Length < inputStrs.Length)
-                    continue;
-                int i = 1;
-                for (; i < paraStrs.Length; i++)
+                var item = commandType.parameters[i];
+                ResetAnalysis(promptBuilder, defaultCommad);
+                //获取一种语法
+                var parsingData = ParsingCommandOnLine(preInput, item);
+                if (parsingData == null)
                 {
-                    resultData.current = inputStrs[inputStrs.Length - 1];
-                    var para = new ParameterStruct();
-                    bool isLength = inputStrs.Length > i && paraStrs.Length > i;
-                    if (isLength && BaseParameterParsing(inputStrs[i], paraStrs[i], out para) && GetTryValueType(commandType, para, resultData))
-                    {
-                        result.Append($" {paraStrs[i]}");
-                        resultData.ClearCompletion();
-                    }
-                    else
-                    {
-                        if (paraStrs.Length > i)
-                        {
-                            BaseParameterParsing(" ", paraStrs[i], out para);
-                            GetTryValueType(commandType, para, resultData);
-                        }
-                        if (!string.IsNullOrEmpty(startColor))
-                            result.Append(overColor);
-                        if (para.type == ParameterType.Optional)
-                            result.Append(optionalParameterColor);
-                        else
-                            result.Append(currentParameterColor);
-                        result.Append($" {paraStrs[i]}");
-                        i++;
-                        break;
-                    }
-                    if (paraStrs.Length > i)
-                    {
-                        BaseParameterParsing(" ", paraStrs[i], out para);
-                        GetTryValueType(commandType, para, resultData);
-                    }
-                }
-                if (inputStrs.Length > i)
-                {
-                    resultData.ClearCompletion();
-                    ResetAnalysis(result, defaultCommand);
+                    parsingData = new ParsingData();
+                    parsingData.indexExecute = -1;
+                    parsingData.parsingResult = "No command found with corresponding syntax";
                     continue;
                 }
-                result.Append(overColor);
-                result.Append(remainingParameterColor);
-                for (; i < paraStrs.Length; i++)
+                var currentPara = parsingData.currentPara;
+                //UnityEngine.Debug.Log($"{parsingData.parsIndex} and {parsingData.paraList.Length}");
+                if (parsingData.IsParameterResult())
                 {
-                    result.Append($" {paraStrs[i]}");
+                    promptBuilder.Append($"{item} {overColor}");
+                    parsingData.indexExecute = i;
+                    resultData.SetParsingData(parsingData);
                 }
-                result.Append(overColor);
-                #endregion
-
-                resultData.AddPrompt(result.ToString());
-                ResetAnalysis(result, defaultCommand);
+                else
+                {
+                    //参数未全
+                    PromptInterpolatedColor(promptBuilder, parsingData.parsIndex, item);
+                }
+                resultData.SetParsingData(parsingData);
+                resultData.AddPrompt(promptBuilder.ToString());
+                if (currentPara != null && !string.IsNullOrEmpty(currentPara.strValue))
+                {
+                    //Get the completion
+                    UnityEngine.Debug.Log($"尝试获取{currentPara.strType}补全");
+                }
             }
             return resultData;
         }
-
-        private static void GetParameterCompletion(string v)
+        public static ParsingData DefaultExecute(CommandStruct commandType, ParsingData data)
         {
-            throw new NotImplementedException();
+            return data;
         }
-
-        public static ExecuteData DefaultExecute(CommandStruct commandType, string preInput, ExecutionTarget target = null)
+        public static ParsingData ParsingCommandOnLine(string input, string para)
         {
-            var backData = new ExecuteData();
-            var inputStrs = preInput.Split(' ').Where(s => !string.IsNullOrEmpty(s)).ToArray();
-            var length = commandType.parameters.Length;
-            for (int item = 0; item < length; item++)
+            var paraStrs = para.Split(' ');
+            var paraList = GetParameterStructs(paraStrs);
+            var inputList = GetInputStruct(input);
+            if (paraList.Length < inputList.Length && inputList[inputList.Length - 1] != " ")
+                return null;
+            int i;
+            string debug = "No parameter parsing";
+            ParameterStruct currentPara = null;
+            ParsingData resultData = new ParsingData();
+            for (i = 0; i < inputList.Length && i < paraList.Length; i++)
             {
-                var paraStrs = ($"{commandType.command} {commandType.parameters[item]}").Split(' ');
-                if (paraStrs.Length < inputStrs.Length)
+                currentPara = paraList[i];
+                paraList[i].strValue = inputList[i];
+                if (!CompareParameterOnInput(currentPara))
                 {
-                    if (item == length - 1)
-                    {
-                        backData.SetValue(-1, "No command found with corresponding syntax");
-                    }
-                    continue;
-                }
-                int i = 1;
-                DebugLog($"Parsing {item} command parameter");
-                for (; i < paraStrs.Length; i++)
-                {
-                    bool isLength = inputStrs.Length > i && paraStrs.Length > i;
-                    var para = new ParameterStruct();
-                    if (isLength && BaseParameterParsing(inputStrs[i], paraStrs[i], out para) && GetTryValueType(commandType, para, isSetValue: true))
-                    {
-                        DebugLog($"Parsed {inputStrs[i]} on {paraStrs[i]} successfully in {i}");
-                    }
-                    else
-                    {
-                        string debug;
-                        if (paraStrs.Length > i)
-                        {
-                            BaseParameterParsing("", paraStrs[i], out para);
-                            if (para.type == ParameterType.Optional)
-                            {
-                                return backData.SetValue(item, $"Successfully parsed {i} parameters");
-                            }
-                            debug = $"Parsing on {paraStrs[i]} failed";
-                        }
-                        else
-                        {
-                            debug = "Missing parameters";
-                        }
-                        backData.SetValue(-1, debug);
-                        //i++;
-                        break;
-                    }
-                }
-                if (i >= paraStrs.Length)
-                {
-                    return backData.SetValue(item, $"Successfully parsed {i} parameters");
+                    debug = $"Parsing {inputList[i]} on {paraStrs[i]} faild";
+                    resultData.indexExecute = -1;
+                    break;
                 }
             }
-            return backData;
+            resultData.paraList = paraList;
+            resultData.parsingResult = debug;
+            resultData.parsIndex = i;
+            resultData.currentPara = currentPara;
+            //if inputlength < paralength
+            if (resultData.indexExecute != -1 && !resultData.IsParameterResult())
+            {
+                resultData.parsingResult = "Missing parameters";
+                resultData.indexExecute = -1;
+            }
+
+            return resultData;
         }
-        // public static int ParsingCommandOnLine(CommandStruct commandType, string[] input, string[] para)
-        // {
-        //     int i = 1;
-        //     for (; i < para.Length; i++)
-        //     {
-        //         if (input.Length > i && para.Length > i && GetTryValueType(commandType, input[i], para[i], true))
-        //         {
-        //             DebugLog($"Parsed {input[i]} on {para[i]} successfully");
-        //         }
-        //         else
-        //         {
-        //             DebugLog($"Parsing {input[i]} on {para[i]} failed");
-        //             i++;
-        //         }
-        //     }
-        //     return i;
-        //     //TODO:优化上面两个像坨屎的解析函数失败，有生之年
-        // }
+        public static ParameterStruct[] GetParameterStructs(string[] paraStrs)
+        {
+            var resultList = new ParameterStruct[paraStrs.Length];
+            for (int i = 0; i < paraStrs.Length; i++)
+            {
+                resultList[i] = GetParameterStruct(paraStrs[i]);
+            }
+            return resultList;
+        }
+        public static string[] GetInputStruct(string input)
+        {
+            string[] result;
+            var strs = input.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            int length = strs.Length;
+            if (input[input.Length - 1] == ' ')
+            {
+                result = new string[length];
+                result[length - 1] = " ";
+            }
+            else
+                result = new string[length - 1];
+            Array.ConstrainedCopy(strs, 1, result, 0, length - 1);
+            //UnityEngine.Debug.Log($"Input is [{string.Join(" ", result)}]");
+            return result;
+        }
         private static void ResetAnalysis(StringBuilder builder, string str)
         {
             builder.Clear();
             builder.Append(str);
         }
-        private static MethodInfo GetStaticTryParse(Type type)
+        public static MethodInfo GetStaticTryParse(Type type)
         {
             return type.GetMethod("TryParse", BindingFlags.Public | BindingFlags.Static, Type.DefaultBinder
              , new Type[] { typeof(string), type.MakeByRefType() }
@@ -359,6 +283,24 @@ namespace CommandSystem
         /// Change it to suit you
         /// </summary>
         /// <param name="obj"></param>
+        public static void PromptInterpolatedColor(StringBuilder t, int index, string source)
+        {
+            var strs = source.Split(' ');
+            for (int i = 0; i < strs.Length; i++)
+            {
+                if (i == index)
+                {
+                    t.Append(overColor);
+                    t.Append(currentParameterColor);
+                    t.Append($"{strs[i]} ");
+                    t.Append(overColor);
+                    t.Append(remainingParameterColor);
+                    continue;
+                }
+                t.Append($"{strs[i]} ");
+            }
+            t.Append(overColor);
+        }
         public static void DebugLog(object obj)
         {
             UnityEngine.Debug.Log(obj);

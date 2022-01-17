@@ -5,6 +5,7 @@ namespace CommandSystem
     /// </summary>
     public abstract class CommandStruct
     {
+        private ParsingData parsingData;
         /// <summary>
         /// command name,Used for prefix parsing
         /// </summary>
@@ -22,20 +23,22 @@ namespace CommandSystem
         /// </summary>
         /// <param name="inputCommand"></param>
         /// <returns>result</returns>
-        public virtual string ExecuteParsing(string inputCommand, ExecutionTarget target = null)
+        public virtual string ExecuteParsing()
         {
-            return Execute(CommandUtil.DefaultExecute(this, inputCommand, target));
+            return Execute(CommandUtil.DefaultExecute(this, parsingData));
         }
-        public abstract string Execute(ExecuteData data);
+        public abstract string Execute(ParsingData data);
 
         /// <summary>
         /// pre input compared
         /// </summary>
         /// <param name="preInput">input string</param>
         /// <returns>string after color processing</returns>
-        public virtual ReturnCommandData CompareToInput(ReturnCommandData resultData)
+        public virtual ReturnCommandData CompareToInput(string preInput, ExecutionTarget target)
         {
-            return CommandUtil.DefaultAnalysis(this, resultData.preInput);
+            var result = CommandUtil.DefaultAnalysis(this, preInput, target);
+            this.parsingData = result.parsingData;
+            return result;
         }
     }
 
