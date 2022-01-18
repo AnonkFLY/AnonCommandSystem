@@ -103,7 +103,6 @@ namespace AnonCommandSystem
                 "<int:killCount>",
                 "<Selector:entitie>",
                 "<string:killObj>"
-
             };
         }
 
@@ -118,7 +117,7 @@ namespace AnonCommandSystem
                     Kill(entitie);
                     break;
                 case 2:
-					Kill(killObj);
+                    Kill(killObj);
                     break;
             }
             return data.indexExecute.ToString();

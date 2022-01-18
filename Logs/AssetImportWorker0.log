@@ -192,3 +192,20 @@ AssetImportParameters requested are different than current active one (requested
   custom:video-decoder-webm-vp8: 9c59270c3fd7afecdb556c50c9e8de78 -> 
   custom:audio-decoder-ogg-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 
   custom:audio-encoder-webm-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 
+========================================================================
+Received Import Request.
+  Time since last request: 2347.982343 seconds.
+  path: Assets/Scripts/CommandSystem/CommandData/CommandDatas.cs
+  artifactKey: Guid(e7b5df8575d7c4f4a84449db57815ed1) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Scripts/CommandSystem/CommandData/CommandDatas.cs using Guid(e7b5df8575d7c4f4a84449db57815ed1) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'aebb39a4051c17994cab511c625993d0') in 0.031811 seconds 
+  Import took 0.034217 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.456098 seconds.
+  path: Assets/Scripts/CommandSystem/CommandData/CommandParameters.cs
+  artifactKey: Guid(33b7e44a2a2309f4aa0242b10ab5609e) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Scripts/CommandSystem/CommandData/CommandParameters.cs using Guid(33b7e44a2a2309f4aa0242b10ab5609e) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'da435e29105573ea6a7c44b4b06f2ff7') in 0.009739 seconds 
+  Import took 0.013475 seconds .
+
+AssetImportWorkerClient::OnTransportError - code=2 error=End of file
