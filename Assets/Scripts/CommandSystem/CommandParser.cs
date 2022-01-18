@@ -1,9 +1,5 @@
-using System.Security.Principal;
-using System.Diagnostics;
-using System.Security.AccessControl;
 using System.Collections.Generic;
 using System;
-using System.Reflection;
 
 namespace AnonCommandSystem
 {
@@ -31,12 +27,12 @@ namespace AnonCommandSystem
             //parameter dictionary
             InitDefaultParameter();
             //command add
-            AddCommand(new TeleportCommand());
-            AddCommand(new KillCommand());
+            // AddCommand(new TeleportCommand());
+            // AddCommand(new KillCommand());
             //Parameter type add
             AddCustomParameterParsing<SelectorParameter>("Selector");
         }
-        public bool AddCommand(CommandStruct command)
+        public bool RegisterCommand(CommandStruct command)
         {
             return commandList.Add(command);
         }
@@ -62,10 +58,10 @@ namespace AnonCommandSystem
             }
             return completionList;
         }
-        public string ExecuteCommand(string input = null)
+        public string ExecuteCommand(string input = null, ExecutionTarget target = null)
         {
             if (!string.IsNullOrEmpty(input))
-                ParseCommand(input);
+                ParseCommand(input, target);
             if (currentCommand != null)
             {
                 return currentCommand.ExecuteParsing();

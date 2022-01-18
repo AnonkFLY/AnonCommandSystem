@@ -157,7 +157,7 @@ namespace AnonCommandSystem
                 default: return false;
             }
         }
-        public static ReturnCommandData DefaultAnalysis(CommandStruct commandType, string preInput, ExecutionTarget target)
+        public static ReturnCommandData DefaultAnalysis(CommandStruct commandType, string preInput, ExecutionTarget target = null)
         {
             var resultData = new ReturnCommandData();
             var promptBuilder = new StringBuilder();
@@ -202,6 +202,8 @@ namespace AnonCommandSystem
                         resultData.AddCompletion(currentPara.completionList.ToArray());
                 }
             }
+            if (resultData.parsingData != null)
+                resultData.parsingData.target = target;
             return resultData;
         }
         public static ParsingData DefaultExecute(CommandStruct commandType, ParsingData data)

@@ -34,7 +34,7 @@ namespace AnonCommandSystem
         /// </summary>
         /// <param name="preInput">input string</param>
         /// <returns>string after color processing</returns>
-        public virtual ReturnCommandData CompareToInput(string preInput, ExecutionTarget target)
+        public virtual ReturnCommandData CompareToInput(string preInput, ExecutionTarget target = null)
         {
             var result = CommandUtil.DefaultAnalysis(this, preInput, target);
             this.parsingData = result.parsingData;

@@ -1,4 +1,4 @@
-namespace AnonCommandSystem
+namespace AnonCommandSystem.ExampleCommand
 {
     public class KillCommand : CommandStruct
     {

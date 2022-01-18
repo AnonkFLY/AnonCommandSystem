@@ -1,7 +1,6 @@
-using System.Diagnostics;
-using System.Text;
+using AnonCommandSystem;
 
-namespace AnonCommandSystem
+namespace AnonCommandSyste.ExampleCommandm
 {
     public class TeleportCommand : CommandStruct
     {

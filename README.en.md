@@ -148,7 +148,7 @@ namespace AnonCommandSystem
 ```C#
 var parser = new CommandParser();
 //Register Kill Command
-parser.AddCommand(new KillCommand());
+parser.RegisterCommand(new KillCommand());
 var resultCount = parser.ExecuteCommand("kill 1");
 print(resultCount);
 //Although it can be parsed as a string, the parsing of <int> is in the front, so the priority is higher than the latter
