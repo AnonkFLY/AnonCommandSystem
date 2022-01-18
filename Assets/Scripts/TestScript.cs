@@ -4,7 +4,7 @@ using System;
 using System.Collections;
 using System.Text;
 using UnityEngine.UI;
-using CommandSystem;
+using AnonCommandSystem;
 using UnityEngine;
 using UnityEditor;
 
@@ -29,7 +29,7 @@ public class TestScript : MonoBehaviour
         // var b =  method.Invoke(objs[1],objs);
         // print($"{b} and {objs[1]}");
 
-        //TestSystem();
+        TestSystem();
     }
     private void TestSystem()
     {
@@ -57,9 +57,9 @@ public class TestScript : MonoBehaviour
     }
     public void GetCommand(string input)
     {
-        var list = parser.GetCompletion(input);
+        var list = parser.ParseCommand(input);
         StringBuilder candidate = new StringBuilder("");
-        foreach (var item in list.completion)
+        foreach (var item in list.completionList)
         {
             // if (item. != -1)
             //     candidate.AppendLine($"<color>{item.completion.Substring(0, item.colorIndex)}</color>{item.completion.Remove(0, item.colorIndex)}");
@@ -99,38 +99,37 @@ public class TestScript : MonoBehaviour
     // }
     public int TestCommandSystem()
     {
-        var commands = new string[]
+        var commands = new TestCommand[]
         {
-            "teleport 1 2 3 facing 1 23",
-            "teleport",
-            "teleport 1",
-            "teleport @a",
-            "teleport @e[c=1]",
-            "teleport @e[=1] facing @a",
-            "teleport 1 2 3 a",
-            "teleport 1 2  3"
+            new TestCommand("teleport 1 2 3 facing 1 23",4),
+            new TestCommand("teleport",-1),
+            new TestCommand("teleport 1",1),
+            new TestCommand("teleport @a",0),
+            new TestCommand("teleport @a[c=1]",0),
+            new TestCommand("teleport 1 2 3 replace",3),
+            new TestCommand("teleport 12  3  4",3),
+            new TestCommand("teleport @a facing @s[c=1]",2)
         };
-        var bools = new string[]
-        {
-            "4",
-            "-1",
-            "1",
-            "0",
-            "0",
-            "-1",
-            "3",
-            "3"
-        };
+
         for (int i = 0; i < commands.Length; i++)
         {
-            parser.GetCompletion(commands[i]);
-            var result = parser.ExecuteCommand();
-            if (result != bools[i])
+            var result = parser.ExecuteCommand(commands[i].command);
+            if (result != commands[i].result.ToString())
             {
                 return i;
             }
         }
         return -1;
+    }
+}
+public struct TestCommand
+{
+    public string command;
+    public int result;
+    public TestCommand(string command, int result)
+    {
+        this.command = command;
+        this.result = result;
     }
 }
 public class MyClass : ICommandParameter<MyClass>

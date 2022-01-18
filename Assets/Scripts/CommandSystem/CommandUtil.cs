@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Runtime.InteropServices;
 
-namespace CommandSystem
+namespace AnonCommandSystem
 {
     public static class CommandUtil
     {
@@ -24,12 +24,13 @@ namespace CommandSystem
         {
             switch (para.paraType)
             {
-                case ParameterType.SyntaxOptions:
-                    return para.strType == para.strValue;
                 case ParameterType.Required:
                     return CompareToRequiredParameter(para);
                 case ParameterType.Optional:
                     return ComparaToOptionalParameter(para);
+                case ParameterType.SyntaxOptions:
+                    para.AddCompletion(para.strType);
+                    return para.strType == para.strValue;
             }
             DebugLog("Error:Not Found Parameter Type");
             return false;
@@ -57,13 +58,14 @@ namespace CommandSystem
             var parameter = para.strType;
             var optionalParameter = new List<string>(parameter.Split('|', ':'));
             //if [destroy|replace|moved:mode] on public string mode;
-            if (optionalParameter.Count > 2)
+            if (optionalParameter.Count >= 2)
             {
+                para.AddCompletion(optionalParameter.ToArray());
                 return optionalParameter.Contains(para.strValue);
             }
             else
             {
-                return false;
+                return ReflectionCompareValue(para);
             }
         }
         /// <summary>
@@ -116,6 +118,7 @@ namespace CommandSystem
             {
                 var methods = GetParameterInterface(para.t);
                 method = methods[0];
+                para.AddCompletion((string[])methods[1].Invoke(parameters[1], new object[] { para.strValue }));
             }
             if (method != null)
             {
@@ -123,9 +126,7 @@ namespace CommandSystem
                 para.getValue = parameters[1];
             }
             else
-            {
                 return false;
-            }
             return (bool)parameters[0];
         }
         public static bool ReflectionSetValue<T>(T obj, string parameterName, object value)
@@ -139,6 +140,21 @@ namespace CommandSystem
             {
                 DebugLog($"Error:{e}");
                 return false;
+            }
+        }
+        public static bool SetValueAble(CommandStruct command, ParameterStruct para)
+        {
+            switch (para.paraType)
+            {
+                case ParameterType.SyntaxOptions:
+                    return para.strType == para.strValue;
+                case ParameterType.Required:
+                    return ReflectionSetValue(command, para.parameterName, para.getValue);
+                case ParameterType.Optional:
+                    if (para.getValue != null) return ReflectionSetValue(command, para.parameterName, para.getValue);
+                    else if (!string.IsNullOrEmpty(para.strValue)) return ReflectionSetValue(command, para.parameterName, para.strValue);
+                    else return true;
+                default: return false;
             }
         }
         public static ReturnCommandData DefaultAnalysis(CommandStruct commandType, string preInput, ExecutionTarget target)
@@ -160,30 +176,48 @@ namespace CommandSystem
                     continue;
                 }
                 var currentPara = parsingData.currentPara;
-                //UnityEngine.Debug.Log($"{parsingData.parsIndex} and {parsingData.paraList.Length}");
-                if (parsingData.IsParameterResult())
+                //UnityEngine.Debug.Log($"read {parsingData.parsIndex}");
+                if (parsingData.IsParameterParseSucceeded())
                 {
-                    promptBuilder.Append($"{item} {overColor}");
+                    if (parsingData.ParaList.Length == parsingData.parsIndex)
+                        promptBuilder.Append($"{item} {overColor}");
+                    else
+                        PromptInterpolatedColor(promptBuilder, parsingData.parsIndex, item, remainingParameterColor);
                     parsingData.indexExecute = i;
+                    parsingData.parsingResult = $"{parsingData.parsIndex} arguments successfully parsed";
                     resultData.SetParsingData(parsingData);
                 }
                 else
                 {
                     //参数未全
-                    PromptInterpolatedColor(promptBuilder, parsingData.parsIndex, item);
+                    PromptInterpolatedColor(promptBuilder, parsingData.parsIndex, item, currentParameterColor);
                 }
                 resultData.SetParsingData(parsingData);
                 resultData.AddPrompt(promptBuilder.ToString());
                 if (currentPara != null && !string.IsNullOrEmpty(currentPara.strValue))
                 {
                     //Get the completion
-                    UnityEngine.Debug.Log($"尝试获取{currentPara.strType}补全");
+                    //UnityEngine.Debug.Log($"尝试获取{currentPara.strType}补全");
+                    if (currentPara.completionList != null)
+                        resultData.AddCompletion(currentPara.completionList.ToArray());
                 }
             }
             return resultData;
         }
         public static ParsingData DefaultExecute(CommandStruct commandType, ParsingData data)
         {
+            if (data.indexExecute != -1)
+            {
+                for (int i = 0; i < data.ParaList.Length; i++)
+                {
+                    if (!SetValueAble(commandType, data.ParaList[i]))
+                    {
+                        data.indexExecute = -1;
+                        data.parsingResult = $"No corresponding parameter variable found on {data.ParaList[i].parameterName}";
+                        break;
+                    }
+                }
+            }
             return data;
         }
         public static ParsingData ParsingCommandOnLine(string input, string para)
@@ -191,7 +225,8 @@ namespace CommandSystem
             var paraStrs = para.Split(' ');
             var paraList = GetParameterStructs(paraStrs);
             var inputList = GetInputStruct(input);
-            if (paraList.Length < inputList.Length && inputList[inputList.Length - 1] != " ")
+            var exceed = paraList.Length < inputList.Length;
+            if (exceed || (exceed && inputList[inputList.Length - 1] != " "))
                 return null;
             int i;
             string debug = "No parameter parsing";
@@ -208,12 +243,12 @@ namespace CommandSystem
                     break;
                 }
             }
-            resultData.paraList = paraList;
+            resultData.ParaList = paraList;
             resultData.parsingResult = debug;
             resultData.parsIndex = i;
             resultData.currentPara = currentPara;
             //if inputlength < paralength
-            if (resultData.indexExecute != -1 && !resultData.IsParameterResult())
+            if (resultData.indexExecute != -1 && !resultData.IsParameterParseSucceeded())
             {
                 resultData.parsingResult = "Missing parameters";
                 resultData.indexExecute = -1;
@@ -251,7 +286,7 @@ namespace CommandSystem
             builder.Clear();
             builder.Append(str);
         }
-        public static MethodInfo GetStaticTryParse(Type type)
+        private static MethodInfo GetStaticTryParse(Type type)
         {
             return type.GetMethod("TryParse", BindingFlags.Public | BindingFlags.Static, Type.DefaultBinder
              , new Type[] { typeof(string), type.MakeByRefType() }
@@ -279,11 +314,7 @@ namespace CommandSystem
                     null);
             return parameterList;
         }
-        /// <summary>
-        /// Change it to suit you
-        /// </summary>
-        /// <param name="obj"></param>
-        public static void PromptInterpolatedColor(StringBuilder t, int index, string source)
+        public static void PromptInterpolatedColor(StringBuilder t, int index, string source, string currentColor)
         {
             var strs = source.Split(' ');
             for (int i = 0; i < strs.Length; i++)
@@ -291,7 +322,7 @@ namespace CommandSystem
                 if (i == index)
                 {
                     t.Append(overColor);
-                    t.Append(currentParameterColor);
+                    t.Append(currentColor);
                     t.Append($"{strs[i]} ");
                     t.Append(overColor);
                     t.Append(remainingParameterColor);
@@ -301,6 +332,10 @@ namespace CommandSystem
             }
             t.Append(overColor);
         }
+        /// <summary>
+        /// Change it to suit you
+        /// </summary>
+        /// <param name="obj"></param>
         public static void DebugLog(object obj)
         {
             UnityEngine.Debug.Log(obj);

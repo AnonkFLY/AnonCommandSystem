@@ -1,13 +1,13 @@
 using System.Linq;
 using System;
 using System.Collections.Generic;
-namespace CommandSystem
+namespace AnonCommandSystem
 {
     public class SelectorParameter : ICommandParameter<SelectorParameter>
     {
         protected List<char> selectorMask = new List<char>(new char[] { 'a', 'p', 'e', 's' });
         public string[] parameterList;
-        public char selector;
+        public char target;
         public int c;
         public string[] GetParameteCompletion(string preInput)
         {
@@ -24,7 +24,7 @@ namespace CommandSystem
                 var parameters = input.Split(' ', '[', '@', ']');
                 if (parameters[0].Length > 1 || !selectorMask.Contains(selector))
                     return false;
-                this.selector = selector;
+                this.target = selector;
                 if (parameters.Length == 2)//if only @x
                     return true;
                 var selectorPara = parameters[2].Split(',');
@@ -50,14 +50,19 @@ namespace CommandSystem
             parameterName = keyValue[0];
             try
             {
-                // if (!CommandUtil.BaseParameterParsing(keyValue[1], $"<{GetSelectorParameterType(keyValue[0]).ToString()}:{keyValue[0]}>", out var para))
-                //     return false;
-                //return CommandUtil.GetTryValueType(this, para, isSetValue: true);
+                var para = CommandUtil.GetParameterStruct($"<{GetSelectorParameterType(parameterName)}:{parameterName}>");
+                para.strValue = keyValue[1];
+                var canSet = CommandUtil.CompareParameterOnInput(para);
+                if (canSet)
+                {
+                    CommandUtil.ReflectionSetValue(this, parameterName, para.getValue);
+                }
+                return canSet;
             }
             catch
             {
+                return false;
             }
-            return false;
         }
         private Type GetSelectorParameterType(string parameterName)
         {

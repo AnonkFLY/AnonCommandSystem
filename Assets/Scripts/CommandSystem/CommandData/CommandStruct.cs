@@ -1,4 +1,4 @@
-namespace CommandSystem
+namespace AnonCommandSystem
 {
     /// <summary>
     /// Abstract base class for all commands

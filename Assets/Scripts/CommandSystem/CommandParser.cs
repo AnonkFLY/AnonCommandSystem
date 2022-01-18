@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System;
 using System.Reflection;
 
-namespace CommandSystem
+namespace AnonCommandSystem
 {
 
     public class CommandParser
@@ -40,7 +40,7 @@ namespace CommandSystem
         {
             return commandList.Add(command);
         }
-        public ReturnCommandData GetCompletion(string preInput, ExecutionTarget target = null)
+        public ReturnCommandData ParseCommand(string preInput, ExecutionTarget target = null)
         {
             this.preInput = preInput;
             currentCommand = null;
@@ -57,13 +57,15 @@ namespace CommandSystem
                 }
                 else if (comm != null)
                 {
-                    completionList.AddCompletion(item.command);
+                    completionList.completionList.Add(item.command);
                 }
             }
             return completionList;
         }
-        public string ExecuteCommand()
+        public string ExecuteCommand(string input = null)
         {
+            if (!string.IsNullOrEmpty(input))
+                ParseCommand(input);
             if (currentCommand != null)
             {
                 return currentCommand.ExecuteParsing();

@@ -2,18 +2,21 @@ using System.Security.Cryptography.X509Certificates;
 using System;
 using System.Collections.Generic;
 
-namespace CommandSystem
+namespace AnonCommandSystem
 {
     /// <summary>
     /// Core data class in this system
     /// </summary>
     public class ReturnCommandData
     {
+        /// <summary>
+        /// parsed command result
+        /// </summary>
         public ParsingData parsingData;
         /// <summary>
         /// Completion list
         /// </summary>
-        public List<string> completion;
+        public List<string> completionList;
         /// <summary>
         /// command prompt list
         /// </summary>
@@ -26,35 +29,15 @@ namespace CommandSystem
         }
         public ReturnCommandData()
         {
-            completion = new List<string>();
+            completionList = new List<string>();
             promptList = new HashSet<string>();
         }
-        public bool AddCompletion(string com)
+        public void AddCompletion(string[] completion)
         {
-            UnityEngine.Debug.Log($"添加{com}");
-            if (completion.Contains(com))
-                return false;
-            completion.Add(com);
-            return true;
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="completionList"></param>
-        public void AddCompletion(string[] completionList)
-        {
-            var merge = new string[completion.Count + completionList.Length];
-            completion.CopyTo(merge, 0);
-            completionList.CopyTo(merge, completion.Count);
-            completion = new List<string>(merge);
-        }
-        public void SetCompletion(string[] completionList)
-        {
-            completion = new List<string>(completionList);
-        }
-        public void ClearCompletion()
-        {
-            completion.Clear();
+            var merge = new string[completionList.Count + completion.Length];
+            completionList.CopyTo(merge, 0);
+            completion.CopyTo(merge, completionList.Count);
+            completionList = new List<string>(merge);
         }
         public bool AddPrompt(string com)
         {
@@ -62,18 +45,40 @@ namespace CommandSystem
         }
         public void SetParsingData(ParsingData data)
         {
-            if (parsingData == null || !parsingData.IsParameterResult())
+            if (parsingData == null || !parsingData.IsParameterParseSucceeded())
+            {
                 parsingData = data;
+            }
         }
     }
     public class ParameterStruct
     {
+        public List<string> completionList = new List<string>();
         public string parameterName;
         public string strType;
         public string strValue;
         public Type t;
         public object getValue;
         public ParameterType paraType;
+        public bool AddCompletion(string com)
+        {
+            if (completionList.Contains(com))
+                return false;
+            completionList.Add(com);
+            return true;
+        }
+        public void AddCompletion(string[] completion)
+        {
+            var merge = new string[completionList.Count + completion.Length];
+            completionList.CopyTo(merge, 0);
+            completion.CopyTo(merge, completionList.Count);
+            completionList = new List<string>(merge);
+        }
+        public void ClearCompletion()
+        {
+            completionList.Clear();
+        }
+
     }
     public class ExecutionTarget
     {
@@ -92,11 +97,28 @@ namespace CommandSystem
         public ExecutionTarget target;
         public string parsingResult;
         public int parsIndex;
-        public ParameterStruct[] paraList;
-        public ParameterStruct currentPara;
-        public bool IsParameterResult()
+        public ParameterStruct[] ParaList
         {
-            return paraList.Length == parsIndex;
+            get
+            {
+                return paraList;
+            }
+            set
+            {
+                paraList = value;
+                for (atLeastParal = paraList.Length - 1; atLeastParal > 0; atLeastParal--)
+                {
+                    if (paraList[atLeastParal].paraType != ParameterType.Optional)
+                        break;
+                }
+            }
+        }
+        public ParameterStruct currentPara;
+        private ParameterStruct[] paraList;
+        private int atLeastParal;
+        public bool IsParameterParseSucceeded()
+        {
+            return atLeastParal < parsIndex && parsIndex <= paraList.Length;
         }
     }
 }

@@ -1,4 +1,4 @@
-namespace CommandSystem
+namespace AnonCommandSystem
 {
     /// <summary>
     /// The interface that needs to be implemented as a custom parameter

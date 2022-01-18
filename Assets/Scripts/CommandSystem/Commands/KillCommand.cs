@@ -1,27 +1,31 @@
-namespace CommandSystem
+namespace AnonCommandSystem
 {
     public class KillCommand : CommandStruct
     {
         public string killObj;
         public int killCount;
+        public SelectorParameter entitie;
         public KillCommand()
         {
             command = "kill";
             parameters = new string[]{
                 "<int:killCount>",
+                "<Selector:entitie>",
                 "<string:killObj>"
             };
         }
 
         public override string Execute(ParsingData data)
         {
-            CommandUtil.DebugLog($"execute index is {data.indexExecute},Results of the {data.parsingResult}");
             switch (data.indexExecute)
             {
                 case 0:
                     Kill(killCount);
                     break;
                 case 1:
+                    Kill(entitie);
+                    break;
+                case 2:
                     Kill(killObj);
                     break;
             }
@@ -34,6 +38,10 @@ namespace CommandSystem
         private void Kill(string killName)
         {
             CommandUtil.DebugLog("kill name of " + killName);
+        }
+        private void Kill(SelectorParameter killTarget)
+        {
+            CommandUtil.DebugLog($"kill Selector @{killTarget.target} count is {killTarget}");
         }
     }
 }
