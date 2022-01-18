@@ -2,6 +2,10 @@
 
 Analysis of the command system modeled after the bedrock version of Minecraft(Waiting for translation)
 
+This project is only used as a parsing framework and will not help you implement any command. The specific functions depend on the actual project, allowing you to quickly implement your command functions.
+
+[Quick Start](#QuickStart)
+
 [中文](https://github.com/Anon-K/AnonCommandSystem/blob/master/README.zh.md)
 
 [English](https://github.com/Anon-K/AnonCommandSystem/blob/master/README.md)
@@ -77,7 +81,7 @@ Target selector and parameter extension
 | CommandPrompt     | 命令提示符数据                     |
 | ExecuteData       | 解析后用于判断执行的数据           |
 
-## Quick start
+## <span id="QuickStart">Quick Start
 
 **第一步:完成命令类**
 

@@ -1,6 +1,10 @@
 # AnonCommandSystem
 仿照Minecraft(我的世界)基岩版本的命令系统解析
 
+此项目只作为一个解析框架,不会帮你实现任何一条命令,具体功能依赖于实际项目,让你快速实现你们命令功能。
+
+[快速开始](#QuickStart)
+
 [中文](https://github.com/Anon-K/AnonCommandSystem/blob/master/README.md)
 
 [English](https://github.com/Anon-K/AnonCommandSystem/blob/master/README.en.md)
@@ -76,7 +80,7 @@ teleport
 | CommandPrompt     | 命令提示符数据                     |
 | ParsingData       | 解析后用于判断执行的数据           |
 
-## 快速开始
+## <span id="QuickStart">快速开始
 
 **第一步:完成命令类**
 
