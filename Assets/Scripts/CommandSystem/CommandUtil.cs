@@ -1,10 +1,7 @@
-using System.Security.Cryptography.X509Certificates;
 using System.Collections.Generic;
-using System.Linq;
 using System;
 using System.Reflection;
 using System.Text;
-using System.Runtime.InteropServices;
 
 namespace AnonCommandSystem
 {
@@ -162,12 +159,14 @@ namespace AnonCommandSystem
             var resultData = new ReturnCommandData();
             var promptBuilder = new StringBuilder();
             var defaultCommad = $"{startColor}{commandType.command} ";
+            preInput = preInput.Replace(commandType.command, "");
+            var inputList = GetInputStruct(preInput);
             for (int i = 0; i < commandType.parameters.Length; i++)
             {
                 var item = commandType.parameters[i];
                 ResetAnalysis(promptBuilder, defaultCommad);
                 //获取一种语法
-                var parsingData = ParsingCommandOnLine(preInput, item);
+                var parsingData = ParsingCommandOnLine(inputList, item);
                 if (parsingData == null)
                 {
                     parsingData = new ParsingData();
@@ -175,8 +174,6 @@ namespace AnonCommandSystem
                     parsingData.parsingResult = "No command found with corresponding syntax";
                     continue;
                 }
-                var currentPara = parsingData.currentPara;
-                //UnityEngine.Debug.Log($"read {parsingData.parsIndex}");
                 if (parsingData.IsParameterParseSucceeded())
                 {
                     if (parsingData.ParaList.Length == parsingData.parsIndex)
@@ -189,23 +186,27 @@ namespace AnonCommandSystem
                 }
                 else
                 {
+                    if (!parsingData.canPrompt)
+                        continue;
                     //参数未全
                     PromptInterpolatedColor(promptBuilder, parsingData.parsIndex, item, currentParameterColor);
                 }
-                resultData.SetParsingData(parsingData);
-                resultData.AddPrompt(promptBuilder.ToString());
-                if (currentPara != null && !string.IsNullOrEmpty(currentPara.strValue))
+                var currentPara = parsingData.currentPara;
+                if (currentPara != null)
                 {
                     //Get the completion
                     //UnityEngine.Debug.Log($"尝试获取{currentPara.strType}补全");
                     if (currentPara.completionList != null)
                         resultData.AddCompletion(currentPara.completionList.ToArray());
                 }
+                resultData.SetParsingData(parsingData);
+                resultData.AddPrompt(promptBuilder.ToString());
             }
             if (resultData.parsingData != null)
                 resultData.parsingData.target = target;
             return resultData;
         }
+
         public static ParsingData DefaultExecute(CommandStruct commandType, ParsingData data)
         {
             if (data.indexExecute != -1)
@@ -222,20 +223,20 @@ namespace AnonCommandSystem
             }
             return data;
         }
-        public static ParsingData ParsingCommandOnLine(string input, string para)
+        public static ParsingData ParsingCommandOnLine(string[] inputList, string para)
         {
             var paraStrs = para.Split(' ');
             var paraList = GetParameterStructs(paraStrs);
-            var inputList = GetInputStruct(input);
-            var exceed = paraList.Length < inputList.Length;
-            if (exceed || (exceed && inputList[inputList.Length - 1] != " "))
+            if (paraList.Length < inputList.Length)
                 return null;
             int i;
             string debug = "No parameter parsing";
             ParameterStruct currentPara = null;
             ParsingData resultData = new ParsingData();
+            //UnityEngine.Debug.Log($"CurrentParament is [{paraList[0].parameterName}]");
             for (i = 0; i < inputList.Length && i < paraList.Length; i++)
             {
+                //UnityEngine.Debug.Log($"Input is [{inputList[i]}]");
                 currentPara = paraList[i];
                 paraList[i].strValue = inputList[i];
                 if (!CompareParameterOnInput(currentPara))
@@ -249,13 +250,13 @@ namespace AnonCommandSystem
             resultData.parsingResult = debug;
             resultData.parsIndex = i;
             resultData.currentPara = currentPara;
+            resultData.canPrompt = !(inputList.Length - 1 > i);//inputList.Length == i;//
             //if inputlength < paralength
             if (resultData.indexExecute != -1 && !resultData.IsParameterParseSucceeded())
             {
                 resultData.parsingResult = "Missing parameters";
                 resultData.indexExecute = -1;
             }
-
             return resultData;
         }
         public static ParameterStruct[] GetParameterStructs(string[] paraStrs)
@@ -269,19 +270,14 @@ namespace AnonCommandSystem
         }
         public static string[] GetInputStruct(string input)
         {
-            string[] result;
-            var strs = input.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            int length = strs.Length;
-            if (input[input.Length - 1] == ' ')
-            {
-                result = new string[length];
-                result[length - 1] = " ";
-            }
-            else
-                result = new string[length - 1];
-            Array.ConstrainedCopy(strs, 1, result, 0, length - 1);
-            //UnityEngine.Debug.Log($"Input is [{string.Join(" ", result)}]");
-            return result;
+            List<string> result;
+            input = input.Replace("~", " ~").Replace("^", " ^");
+            input = GetStringValueOnInput(input);
+            var strs = input.ToLower().Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            result = new List<string>(strs);
+            if (!string.IsNullOrEmpty(input) && input[input.Length - 1] == ' ')
+                result.Add(" ");
+            return result.ToArray();
         }
         private static void ResetAnalysis(StringBuilder builder, string str)
         {
@@ -333,6 +329,30 @@ namespace AnonCommandSystem
                 t.Append($"{strs[i]} ");
             }
             t.Append(overColor);
+        }
+        public static string GetStringValueOnInput(string str)
+        {
+            int count = 0;
+            int startIndex = 0;
+            int i = 0;
+            int j = 0;
+            while (true)
+            {
+                count++;
+                if (count > 100)
+                    break;
+                i = str.IndexOf("\"", startIndex);
+                if (i == -1)
+                    break;
+                var a = str.Substring(0, i);
+                j = str.IndexOf("\"", i + 1);
+                if (j == -1)
+                    break;
+                var b = str.Substring(i, j).Replace(" ", "&nbsp");
+                var c = str.Substring(j + 1);
+                str = a + b + c;
+            }
+            return str;
         }
         /// <summary>
         /// Change it to suit you

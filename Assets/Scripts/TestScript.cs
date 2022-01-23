@@ -18,7 +18,21 @@ public class TestScript : MonoBehaviour
     [MenuItem("Debug/Button")]
     public static void DebugButton()
     {
-        print(string.IsNullOrEmpty(""));
+        var str = "\"a  b\"";
+        print(str.Length);
+        var i = str.IndexOf("\"", 0);
+        if (i == -1)
+            print("无");
+        print(i);
+        var a = str.Substring(0, i);
+        var j = str.IndexOf("\"", i + 1);
+        if (j == -1)
+            print("无");
+        print(j);
+        var b = str.Substring(i, j).Replace(' ', '+');
+        var c = str.Substring(j);
+        str = a + b + c;
+        print(str);
     }
     private void Awake()
     {

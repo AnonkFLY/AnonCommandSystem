@@ -34,10 +34,11 @@ namespace AnonCommandSystem
         }
         public void AddCompletion(string[] completion)
         {
-            var merge = new string[completionList.Count + completion.Length];
-            completionList.CopyTo(merge, 0);
-            completion.CopyTo(merge, completionList.Count);
-            completionList = new List<string>(merge);
+            for (int i = 0; i < completion.Length; i++)
+            {
+                if (!completionList.Contains(completion[i]))
+                    completionList.Add(completion[i]);
+            }
         }
         public bool AddPrompt(string com)
         {
@@ -83,6 +84,7 @@ namespace AnonCommandSystem
     public class ExecutionTarget
     {
         public float[] position = new float[3];
+        public float[] forward = new float[3];
         public string name;
     }
     public enum ParameterType
@@ -94,6 +96,7 @@ namespace AnonCommandSystem
     public class ParsingData
     {
         public int indexExecute;
+        public bool canPrompt;
         public ExecutionTarget target;
         public string parsingResult;
         public int parsIndex;

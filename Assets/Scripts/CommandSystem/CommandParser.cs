@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System;
+using AnonCommandSyste.ExampleCommandm;
 
 namespace AnonCommandSystem
 {
@@ -27,7 +28,7 @@ namespace AnonCommandSystem
             //parameter dictionary
             InitDefaultParameter();
             //command add
-            // AddCommand(new TeleportCommand());
+            RegisterCommand(new TeleportCommand());
             // AddCommand(new KillCommand());
             //Parameter type add
             AddCustomParameterParsing<SelectorParameter>("Selector");
@@ -38,6 +39,8 @@ namespace AnonCommandSystem
         }
         public ReturnCommandData ParseCommand(string preInput, ExecutionTarget target = null)
         {
+            if (currentCommand != null && preInput.Split(' ')[0] == currentCommand.command)
+                return currentCommand.CompareToInput(preInput, target);
             this.preInput = preInput;
             currentCommand = null;
             var completionList = new ReturnCommandData();
@@ -45,13 +48,13 @@ namespace AnonCommandSystem
             foreach (var item in commandList)
             {
                 var comm = ParsingCommand(preInput, item.command);
-                if (comm == item.command)
+                if (comm == true)
                 {
                     //Analysis of command parameters
                     currentCommand = item;
                     return item.CompareToInput(preInput, target);
                 }
-                else if (comm != null)
+                else if (comm == null)
                 {
                     completionList.completionList.Add(item.command);
                 }
@@ -97,24 +100,23 @@ namespace AnonCommandSystem
         /// <param name="preInput"></param>
         /// <param name="command"></param>
         /// <returns></returns>
-        private string ParsingCommand(string preInput, string command)
+        private bool? ParsingCommand(string preInput, string command)
         {
-            preInput = preInput.Split(' ')[0];
-            if (preInput.Length > command.Length)
-                return null;
-            if (preInput == command)
-                return command;
-            //输入为空。输入一半命令，输入全命令，，， 输入命令，在其他命令是半命令
+            //null
             if (string.IsNullOrEmpty(preInput))
                 return null;
-            int length = Math.Min(preInput.Length, command.Length);
-            for (int i = 0; i < length; i++)
+            var strs = preInput.ToLower().Split(' ');
+            preInput = strs[0];
+            if (command.IndexOf(preInput) == 0)
             {
-                if (preInput[i] != command[i])
+                if (command == preInput)
+                    return true;
+                if (command.Length > preInput.Length && strs.Length == 1)
                     return null;
             }
-            return preInput.Substring(0, length);
+            return false;
         }
+
         /// <summary>
         /// String parsing on Custom Parsing
         /// </summary>
@@ -123,7 +125,7 @@ namespace AnonCommandSystem
         /// <returns></returns>
         private bool StringParsing(ParameterStruct para, string input)
         {
-            para.getValue = input;
+            para.getValue = input.Replace("&nbsp", " ").Replace("\"", "");
             if (para.t == typeof(string) && input != "")
                 return true;
             return false;

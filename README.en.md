@@ -6,7 +6,7 @@ This project is only used as a parsing framework and will not help you implement
 
 [Quick Start](#QuickStart)
 
-[中文](https://github.com/Anon-K/AnonCommandSystem/blob/master/README.zh.md)
+[中文](https://github.com/Anon-K/AnonCommandSystem/blob/master/README.md)
 
 [English](https://github.com/Anon-K/AnonCommandSystem/blob/master/README.md)
 
