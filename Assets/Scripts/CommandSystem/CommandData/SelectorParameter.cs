@@ -9,10 +9,6 @@ namespace AnonCommandSystem
         public string[] parameterList;
         public char target;
         public int c;
-        public string[] GetParameteCompletion(string preInput)
-        {
-            return selectorMask.Select<char, string>(c => { return "@" + c.ToString(); }).ToArray();
-        }
         public bool TryParse(string input, out SelectorParameter getValue)
         {
             getValue = this;
@@ -53,21 +49,15 @@ namespace AnonCommandSystem
                 var para = CommandUtil.GetParameterStruct($"<{GetSelectorParameterType(parameterName)}:{parameterName}>");
                 para.strValue = keyValue[1];
                 var canSet = CommandUtil.CompareParameterOnInput(para);
-                if (canSet)
-                {
-                    CommandUtil.ReflectionSetValue(this, parameterName, para.getValue);
-                }
-                return canSet;
+                return canSet ? CommandUtil.ReflectionSetValue(this, parameterName, para.getValue) : false;
             }
             catch
             {
                 return false;
             }
         }
-        private Type GetSelectorParameterType(string parameterName)
-        {
-            return this.GetType().GetField(parameterName).FieldType;
-        }
+        private Type GetSelectorParameterType(string parameterName) => this.GetType().GetField(parameterName).FieldType;
+        public string[] GetParameteCompletion(string preInput) => selectorMask.Select<char, string>(c => { return "@" + c.ToString(); }).ToArray();
     }
 
 }

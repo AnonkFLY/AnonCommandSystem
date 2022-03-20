@@ -156,6 +156,8 @@ namespace AnonCommandSystem
         }
         public static ReturnCommandData DefaultAnalysis(CommandStruct commandType, string preInput, ExecutionTarget target = null)
         {
+            if (commandType.parameters == null)
+                return null;
             var resultData = new ReturnCommandData();
             var promptBuilder = new StringBuilder();
             var defaultCommad = $"{startColor}{commandType.command} ";
@@ -209,6 +211,8 @@ namespace AnonCommandSystem
 
         public static ParsingData DefaultExecute(CommandStruct commandType, ParsingData data)
         {
+            if (data == null)
+                return null;
             if (data.indexExecute != -1)
             {
                 for (int i = 0; i < data.ParaList.Length; i++)
@@ -271,7 +275,7 @@ namespace AnonCommandSystem
         public static string[] GetInputStruct(string input)
         {
             List<string> result;
-            input = input.Replace("~", " ~").Replace("^", " ^");
+            //input = input.Replace("~", " ~").Replace("^", " ^");
             input = GetStringValueOnInput(input);
             var strs = input.ToLower().Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             result = new List<string>(strs);

@@ -5,16 +5,6 @@ namespace AnonCommandSystem.ExampleCommand
         public string killObj;
         public int killCount;
         public SelectorParameter entitie;
-        public KillCommand()
-        {
-            command = "kill";
-            parameters = new string[]{
-                "<int:killCount>",
-                "<Selector:entitie>",
-                "<string:killObj>"
-            };
-        }
-
         public override string Execute(ParsingData data)
         {
             switch (data.indexExecute)
@@ -31,6 +21,17 @@ namespace AnonCommandSystem.ExampleCommand
             }
             return data.indexExecute.ToString();
         }
+
+        public override void InitCommand()
+        {
+            command = "kill";
+            parameters = new string[]{
+                "<int:killCount>",
+                "<Selector:entitie>",
+                "<string:killObj>"
+            };
+        }
+
         private void Kill(int count)
         {
             CommandUtil.DebugLog("kill of " + count);

@@ -1,3 +1,5 @@
+using System;
+
 namespace AnonCommandSystem
 {
     /// <summary>
@@ -6,6 +8,7 @@ namespace AnonCommandSystem
     public abstract class CommandStruct
     {
         private ParsingData parsingData;
+        public event Action<ParsingData, CommandStruct> onExecute;
         /// <summary>
         /// command name,Used for prefix parsing
         /// </summary>
@@ -23,11 +26,14 @@ namespace AnonCommandSystem
         /// </summary>
         /// <param name="inputCommand"></param>
         /// <returns>result</returns>
+        public abstract string Execute(ParsingData data);
+        public abstract void InitCommand();
         public virtual string ExecuteParsing()
         {
-            return Execute(CommandUtil.DefaultExecute(this, parsingData));
+            var data = CommandUtil.DefaultExecute(this, parsingData);
+            onExecute?.Invoke(data, this);
+            return Execute(data);
         }
-        public abstract string Execute(ParsingData data);
 
         /// <summary>
         /// pre input compared
@@ -37,7 +43,7 @@ namespace AnonCommandSystem
         public virtual ReturnCommandData CompareToInput(string preInput, ExecutionTarget target = null)
         {
             var result = CommandUtil.DefaultAnalysis(this, preInput, target);
-            this.parsingData = result.parsingData;
+            this.parsingData = result?.parsingData;
             return result;
         }
     }

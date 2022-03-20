@@ -19,6 +19,9 @@ namespace AnonCommandSystem
         private CommandStruct currentCommand;
         private HashSet<CommandStruct> commandList;
         private string preInput = " ";
+
+        public HashSet<CommandStruct> CommandList { get => commandList; set => commandList = value; }
+
         public CommandParser()
         {
             //init
@@ -28,13 +31,14 @@ namespace AnonCommandSystem
             //parameter dictionary
             InitDefaultParameter();
             //command add
-            RegisterCommand(new TeleportCommand());
+            //RegisterCommand(new TeleportCommand());
             // AddCommand(new KillCommand());
             //Parameter type add
             AddCustomParameterParsing<SelectorParameter>("Selector");
         }
         public bool RegisterCommand(CommandStruct command)
         {
+            command.InitCommand();
             return commandList.Add(command);
         }
         public ReturnCommandData ParseCommand(string preInput, ExecutionTarget target = null)

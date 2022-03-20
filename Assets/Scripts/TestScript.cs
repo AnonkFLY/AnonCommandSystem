@@ -7,6 +7,8 @@ using UnityEngine.UI;
 using AnonCommandSystem;
 using UnityEngine;
 using UnityEditor;
+using AnonCommandSyste.ExampleCommandm;
+using AnonCommandSystem.ExampleCommand;
 
 public class TestScript : MonoBehaviour
 {
@@ -37,7 +39,9 @@ public class TestScript : MonoBehaviour
     private void Awake()
     {
         parser = new CommandParser();
-
+        parser.RegisterCommand(new TeleportCommand());
+        parser.RegisterCommand(new KillCommand());
+        parser.RegisterCommand(new StaticCommand());
         // var method = CommandUtil.GetStaticTryParse(typeof(int));
         // var objs = new object[] { "1", 0 };
         // var b =  method.Invoke(objs[1],objs);
@@ -73,6 +77,8 @@ public class TestScript : MonoBehaviour
     {
         var list = parser.ParseCommand(input);
         StringBuilder candidate = new StringBuilder("");
+        if (list == null)
+            return;
         foreach (var item in list.completionList)
         {
             // if (item. != -1)

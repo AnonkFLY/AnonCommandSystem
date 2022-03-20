@@ -9,17 +9,6 @@ namespace AnonCommandSyste.ExampleCommandm
         public SelectorParameter entiteName, qentiteName;
         public string cust;
         public string mode;
-        public TeleportCommand()
-        {
-            command = "teleport";
-            parameters = new string[]{
-                "<Selector:entiteName>",
-                 "<string:cust>",
-                "<Selector:entiteName> facing <Selector:qentiteName>",
-                 "<float:x> <float:y> <float:z> [replace|moved|keep|abab:mode]",
-                "<float:x> <float:y> <float:z> facing <float:qx> <float:qy>"
-            };
-        }
 
         public override string Execute(ParsingData data)
         {
@@ -40,12 +29,23 @@ namespace AnonCommandSyste.ExampleCommandm
                     UnityEngine.Debug.Log($"Teleport On {x} {y} {z} facing [{qx}] [{qy}]");
                     break;
                 case 3:
-
                     break;
             }
             //CommandUtil.DebugLog($"{data.indexExecute} of {data.resultStr}");
             //UnityEngine.Debug.Log($"cust value is {cust.id} and {cust.name}");
             return data.indexExecute.ToString();
+        }
+
+        public override void InitCommand()
+        {
+            command = "teleport";
+            parameters = new string[]{
+                "<Selector:entiteName>",
+                 "<string:cust>",
+                "<Selector:entiteName> facing <Selector:qentiteName>",
+                 "<float:x> <float:y> <float:z> [replace|moved|keep|abab:mode]",
+                "<float:x> <float:y> <float:z> facing <float:qx> <float:qy>"
+            };
         }
     }
 }
