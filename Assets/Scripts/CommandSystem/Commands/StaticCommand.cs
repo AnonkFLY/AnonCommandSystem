@@ -11,7 +11,7 @@ namespace AnonCommandSyste.ExampleCommandm
         {
             return "Execute";
         }
-        public override void InitCommand()
+        public override void InitCommand(CommandParser parser)
         {
             command = "static";
         }

@@ -13,6 +13,7 @@ namespace AnonCommandSystem
         /// command name,Used for prefix parsing
         /// </summary>
         public string command;
+        public string commandLower;
         /// <summary>
         /// describe for this command
         /// </summary>
@@ -26,13 +27,20 @@ namespace AnonCommandSystem
         /// </summary>
         /// <param name="inputCommand"></param>
         /// <returns>result</returns>
-        public abstract string Execute(ParsingData data);
-        public abstract void InitCommand();
+        public virtual string Execute(ParsingData data)
+        {
+            return CommandUtil.DefaultExecuteResult(data);
+        }
+        public abstract void InitCommand(CommandParser parser);
         public virtual string ExecuteParsing()
         {
             var data = CommandUtil.DefaultExecute(this, parsingData);
             onExecute?.Invoke(data, this);
             return Execute(data);
+        }
+        public virtual void AfterInit()
+        {
+            commandLower = command.ToLower();
         }
 
         /// <summary>

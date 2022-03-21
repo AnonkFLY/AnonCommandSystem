@@ -29,7 +29,7 @@ namespace AnonCommandSystem
                     para.AddCompletion(para.strType);
                     return para.strType == para.strValue;
             }
-            DebugLog("Error:Not Found Parameter Type");
+            DebugLog($"Error:Not Found Parameter Type {para.strType}");
             return false;
         }
         public static bool CompareToRequiredParameter(ParameterStruct para)
@@ -47,7 +47,7 @@ namespace AnonCommandSystem
             {
                 return ReflectionCompareValue(para);
             }
-            DebugLog("Error:The parameter type is wrong, only [int|float|string|bool|byte] type, if you want to customize the type, please use [AddCustomParameterParsing] in <CommandParser>");
+            DebugLog($"Error:The parameter type is wrong on {para.strType}, only [int|float|string|bool|byte] type, if you want to customize the type, please use [AddCustomParameterParsing] in <CommandParser>");
             return false;
         }
         public static bool ComparaToOptionalParameter(ParameterStruct para)
@@ -83,18 +83,20 @@ namespace AnonCommandSystem
                     break;
                 default:
                     par.paraType = ParameterType.SyntaxOptions;
-                    par.strType = type;
+                    par.strType = type.ToLower();
                     return par;
             }
             var strs = type.Split(new char[] { ':', '<', '>', '[', ']' }, StringSplitOptions.RemoveEmptyEntries);
+            var typeLower = strs[0].ToLower();
             par.parameterName = strs[1];
-            par.strType = strs[0];
-            if (CommandParser.parameterDict.TryGetValue(strs[0], out var getValue))
+            par.strType = typeLower;
+            if (CommandParser.parameterDict.TryGetValue(typeLower, out var getValue))
+            {
                 par.t = Type.GetType(getValue);
+                par.strType = getValue;
+            }
             else
                 par.t = Type.GetType(strs[0]);
-            if (getValue != null)
-                par.strType = getValue;
             return par;
         }
         /// <summary>
@@ -135,7 +137,7 @@ namespace AnonCommandSystem
             }
             catch (System.Exception e)
             {
-                DebugLog($"Error:{e}");
+                DebugLog($"SetValueError: {obj} set {parameterName} on {value}----{e}");
                 return false;
             }
         }
@@ -160,8 +162,8 @@ namespace AnonCommandSystem
                 return null;
             var resultData = new ReturnCommandData();
             var promptBuilder = new StringBuilder();
-            var defaultCommad = $"{startColor}{commandType.command} ";
-            preInput = preInput.Replace(commandType.command, "");
+            var defaultCommad = $"{startColor}{commandType.commandLower} ";
+            preInput = preInput.Replace(commandType.commandLower, "");
             var inputList = GetInputStruct(preInput);
             for (int i = 0; i < commandType.parameters.Length; i++)
             {
@@ -174,6 +176,7 @@ namespace AnonCommandSystem
                     parsingData = new ParsingData();
                     parsingData.indexExecute = -1;
                     parsingData.parsingResult = "No command found with corresponding syntax";
+                    resultData.SetParsingData(parsingData);
                     continue;
                 }
                 if (parsingData.IsParameterParseSucceeded())
@@ -357,6 +360,13 @@ namespace AnonCommandSystem
                 str = a + b + c;
             }
             return str;
+        }
+
+        public static string DefaultExecuteResult(ParsingData data)
+        {
+            if (data == null || data.indexExecute == -1)
+                return "";
+            return data.parsingResult;
         }
         /// <summary>
         /// Change it to suit you

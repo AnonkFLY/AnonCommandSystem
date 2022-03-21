@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System;
-using AnonCommandSyste.ExampleCommandm;
 
 namespace AnonCommandSystem
 {
@@ -38,7 +37,8 @@ namespace AnonCommandSystem
         }
         public bool RegisterCommand(CommandStruct command)
         {
-            command.InitCommand();
+            command.InitCommand(this);
+            command.AfterInit();
             return commandList.Add(command);
         }
         public ReturnCommandData ParseCommand(string preInput, ExecutionTarget target = null)
@@ -87,7 +87,7 @@ namespace AnonCommandSystem
         public bool AddCustomParameterParsing<T>(string keyParameter) where T : ICommandParameter<T>, new()
         {
             T t = new T();
-            parameterDict.Add(keyParameter, t.ToString());
+            parameterDict.Add(keyParameter.ToLower(), t.ToString());
             return true;
         }
         private void InitDefaultParameter()

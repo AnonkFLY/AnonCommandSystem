@@ -86,31 +86,47 @@ teleport
 
 创建自己的命令
 
-1.初始化command变量和paramters如下格式(示例使用了构造函数初始化)
+1.初始化command变量和paramters如下格式
+
+*参数类型(type),参数名(parameterName),类型(type)和固定语法参数(SyntaxOptions)都固定为小写,使命令不区分大小写*
+
+```c#
+Required parameter "<type:parameterName>"
+Optional parameter "[a|b|c:parameterName]" or "[type:parameterName]"
+SyntaxOptions parameter "detect"
+```
+
+
 
 *内部解析是使用反射来进行赋值属性的,所以设定语法只需要与类的属性一致即可*
 
 2.完成Execute函数
 
 ```C#	
-namespace AnonCommandSystem
+namespace AnonCommandSystem.ExampleCommand
 {
     public class KillCommand : CommandStruct
     {
         public string killObj;
         public int killCount;
-        public Selector entitie;
-        public KillCommand()
+        public SelectorParameter entitie;
+        public string mode;
+        public int maxCount;
+
+
+        public override void InitCommand(CommandParser parser)
         {
             command = "kill";
             parameters = new string[]{
                 "<int:killCount>",
                 "<Selector:entitie>",
+                "All <int:maxCount>",
+                "[a|b|c:mode]",
                 "<string:killObj>"
             };
+            onExecute += ExecuteEffect;
         }
-
-        public override string Execute(ParsingData data)
+        public void ExecuteEffect(ParsingData data, CommandStruct command)
         {
             switch (data.indexExecute)
             {
@@ -121,11 +137,40 @@ namespace AnonCommandSystem
                     Kill(entitie);
                     break;
                 case 2:
+                    CommandUtil.DebugLog("kill All of maxCount: " + maxCount);
+                    break;
+                case 3:
+                    CommandUtil.DebugLog("kill mode is " + mode);
+                    break;
+                case 4:
                     Kill(killObj);
                     break;
             }
-            return data.indexExecute.ToString();
         }
+        // or override Execute
+        // public override string Execute(ParsingData data)
+        // {
+        //     switch (data.indexExecute)
+        //     {
+        //    		case 0:
+        //    		    Kill(killCount);
+        //    		    break;
+        //    		case 1:
+        //    		    Kill(entitie);
+        //    		    break;
+        //    		case 2:
+        //    		    Kill(killObj);
+        //    		    break;
+        //    		case 3:
+        //    		    CommandUtil.DebugLog("kill All of maxCount: " + maxCount);
+        //    		    break;
+        //    		case 4:
+        //    		    CommandUtil.DebugLog("kill mode is" + mode);
+        //    		    break;
+        //     }
+        //     return data.indexExecute.ToString();
+        // }
+
         private void Kill(int count)
         {
             CommandUtil.DebugLog("kill of " + count);
@@ -157,14 +202,26 @@ print(resultCount);
 //Although it can be parsed as a string, the parsing of <int> is in the front, so the priority is higher than the latter
 //Output result:kill of 1
 //Print result:0
+
 var resultName = parser.ExecuteCommand("kill @a[c=3]");
 print(resultName);
 //Output result:kill Selector @a count is 3
 //Print result:1
+
+var resultName = parser.ExecuteCommand("kill all 3");
+print(resultName);
+//Output result:kill All of maxCount: 3
+//Print result:2
+
 var resultName = parser.Exec("kill a");
 print(resultName);
-//Output result:kill name of a
-//Print result:2
+//Output result:kill mode is a
+//Print result:3
+
+var resultName = parser.ExecuteCommand("kill anonk");
+print(resultName);
+//Output result:kill name of anonk
+//Print result:4
 ```
 
 ### 获取补全与语法提示
@@ -190,7 +247,16 @@ public class ReturnCommandData
 }
 ```
 
+#### 设置提示自定义颜色
 
+    public static class CommandUtil
+    {
+    	public static string startColor = "<color=white>";
+    	public static string currentParameterColor = "<color=red>";
+    	public static string remainingParameterColor = "<color=grey>";
+    	public static string optionalParameterColor = "<color=grey>";
+    	public static string overColor = "</color>";
+     }
 
 ### 使用自定义类
 
@@ -256,7 +322,7 @@ parser.AddCustomParameterParsing(CustomParsing);
 
 ## 将来
 
-+ 解析~(相对坐标)与^(局部坐标)
++ //解析~(相对坐标)与^(局部坐标)
++ 增加[replace|moved|normal:mode=normal] 选填参数的默认值
 + ~~解析选择器(@a/p/e/s)与选择器参数([name/lm/l...])~~
-
 + ~~解析[]的枚举或可选参数(destroy/replace)~~

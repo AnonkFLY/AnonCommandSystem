@@ -36,7 +36,7 @@ namespace AnonCommandSyste.ExampleCommandm
             return data.indexExecute.ToString();
         }
 
-        public override void InitCommand()
+        public override void InitCommand(CommandParser parser)
         {
             command = "teleport";
             parameters = new string[]{
